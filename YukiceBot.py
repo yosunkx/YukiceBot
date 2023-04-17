@@ -29,5 +29,4 @@ async def on_message(message):
 async def ping(ctx):
     await ctx.send('Pong!')
 
-token = 'MTA5NzM0MTc0NzQ1OTI3Mjg0NQ.Gst0oI.NrP5b8dn9gPKbi-c8UzyKfTjjt4K9Z6sP7aBhQ'
 bot.run(token)
