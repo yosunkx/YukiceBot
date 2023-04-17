@@ -1,6 +1,14 @@
 import discord
 from discord.ext import commands
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()  # Load the environment variables from the .env file
+
+token = os.environ['DISCORD_BOT_TOKEN']  # Access the API key
+
+
 intents = discord.Intents.all()
 
 bot = commands.Bot(command_prefix=commands.when_mentioned_or('!'), intents=intents)
@@ -29,5 +37,4 @@ async def on_message(message):
 async def ping(ctx):
     await ctx.send('Pong!')
 
-token = 'MTA5NzM0MTc0NzQ1OTI3Mjg0NQ.Gst0oI.NrP5b8dn9gPKbi-c8UzyKfTjjt4K9Z6sP7aBhQ'
 bot.run(token)
