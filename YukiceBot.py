@@ -1,6 +1,14 @@
 import discord
 from discord.ext import commands
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()  # Load the environment variables from the .env file
+
+token = os.environ['DISCORD_BOT_TOKEN']  # Access the API key
+
+
 intents = discord.Intents.all()
 
 bot = commands.Bot(command_prefix=commands.when_mentioned_or('!'), intents=intents)
