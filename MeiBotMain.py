@@ -7,6 +7,7 @@ from discord.ext import commands
 from discord.ext import tasks
 import CalendarModule
 import tof
+import MessageID
 
 load_dotenv()
 DISCORD_API_KEY = os.getenv('DISCORD_BOT_TOKEN')
@@ -14,7 +15,7 @@ DISCORD_API_KEY = os.getenv('DISCORD_BOT_TOKEN')
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix=commands.when_mentioned_or('!'), intents=intents)
 
-event_messages = {}
+MessageID_log = MessageID.MessageID()
 
 @bot.event
 async def on_ready():
@@ -86,15 +87,12 @@ async def check_events():
             description = event.get('description', '')
             if not start_timestamp or not end_timestamp:
                 continue
-            if description in event_messages:
-                if event_messages[description] >= now:
-                    continue
             start_time = datetime.datetime.utcfromtimestamp(int(start_timestamp))
             end_time = datetime.datetime.utcfromtimestamp(int(end_timestamp))
             if start_time <= now_plus_2_minutes:
                 if not description:
                     continue
-                unique_event_ID, message, role_name = description.split(',')
+                start_ID, message, role_name, end_ID = description.split(',')
                 role = discord.utils.get(bot.guilds[0].roles, name=role_name)
                 if role:
                     formatted_string = f"{role.mention} {message} <t:{start_timestamp}:R>"
@@ -106,12 +104,11 @@ async def check_events():
                     await channel.send(formatted_string)
                     if 'tower of fantasy dailies' in summary:
                         tof.add_tof_dailies(start_time)
-                    event_messages[description] = now
 
             if end_time <= now_plus_2_minutes and end_timestamp != start_timestamp:
                 if not description:
                     continue
-                unique_event_ID, message, role_name = description.split(',')
+                start_ID, message, role_name, end_ID = description.split(',')
                 role = discord.utils.get(bot.guilds[0].roles, name=role_name)
                 if role:
                     formatted_string = f"{role.mention} {message} ends  <t:{end_timestamp}:R>"
@@ -121,7 +118,6 @@ async def check_events():
                         channel_name = 'general-chat'
                     channel = discord.utils.get(bot.guilds[0].text_channels, name=channel_name)
                     await channel.send(formatted_string)
-                    event_messages[description] = now
 
 
 

@@ -1,8 +1,10 @@
 import os
 import asyncio
 import datetime
+from random import random
 import CalendarModule
 from dotenv import load_dotenv, set_key
+import MessageID
 
 load_dotenv()
 raid_day = os.getenv('RAID_DAY') or '0'
@@ -10,7 +12,8 @@ void_day = os.getenv('VOID_DAY') or '4'
 fch_day = os.getenv('FCH_DAY') or '5'
 
 async def add_tof_dailies(prev_time):
-    description = '1,JJ'
+    description = MessageID.generate_random_ID()
+    description += ',JJ'
     start_time = prev_time + datetime.timedelta(hours = 24)
 
     # Get the current day of the week as an integer (0=Monday, 6=Sunday)
@@ -28,7 +31,8 @@ async def add_tof_dailies(prev_time):
         description += '>fch'
         set_key('.env', 'FCH_DAY', None)
 
-    description += ',ToF'
+    description += ',ToF,'
+    description += MessageID.generate_random_ID()
 
     CalendarModule.add_event(start_time, None, 'tower of fantasy dailies', description)
 

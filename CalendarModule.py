@@ -1,12 +1,14 @@
 import os
 import asyncio
 from pickle import NONE
+from pydoc import describe
 import aiohttp
 from dotenv import load_dotenv
 from google.oauth2 import service_account
 from googleapiclient.errors import HttpError
 from googleapiclient.discovery import build
 import datetime
+import MessageID
 
 SERVICE_ACCOUNT_FILE = 'C:/Users/Kevin/Documents/YukiceBot/meibot-384017-177d6e3bc3bb.json'
 SCOPES = ['https://www.googleapis.com/auth/calendar']
@@ -17,9 +19,13 @@ credentials = service_account.Credentials.from_service_account_file(
         SERVICE_ACCOUNT_FILE, scopes=SCOPES)
 
 async def add_test_event(start_time):
+    description = MessageID.generate_random_ID()
+    description += ',test event,bottesting,'
+    description += MessageID.generate_random_ID()
+
     event = {
         'summary': 'Sample Event',
-        'description': '0,test,bottesting',
+        'description': description,
         'start': {
             'dateTime': start_time.isoformat(),
             'timeZone': 'UTC',
