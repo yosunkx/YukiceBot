@@ -5,7 +5,7 @@
     <ProjectGuid>6f616963-5d5c-4eeb-ad68-b747a00faa01</ProjectGuid>
     <ProjectHome>
     </ProjectHome>
-    <StartupFile>YukiceBot.py</StartupFile>
+    <StartupFile>MeiBotMain.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -23,11 +23,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="CalendarModule.py" />
-    <Compile Include="YukiceBot.py" />
+    <Compile Include="tof.py" />
+    <Compile Include="MeiBotMain.py" />
   </ItemGroup>
   <ItemGroup>
     <Content Include=".env" />
     <Content Include="botsettings.txt" />
+    <Content Include="tof_counters.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
