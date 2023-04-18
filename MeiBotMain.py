@@ -1,3 +1,4 @@
+from mailbox import Message
 import os
 import asyncio
 import datetime
@@ -84,40 +85,44 @@ async def check_events():
             start_timestamp = event.get('start_timestamp', '')
             end_timestamp = event.get('end_timestamp', '')
             summary = event.get('summary', '')
-            description = event.get('description', '')
+            start_ID = event.get('start_ID', '')
+            message = event.get('message', '')
+            role_name = event.get('role_name', '')
+            end_ID = event.get('end_ID', '')
             if not start_timestamp or not end_timestamp:
                 continue
+            role = discord.utils.get(bot.guilds[0].roles, name=role_name)
             start_time = datetime.datetime.utcfromtimestamp(int(start_timestamp))
             end_time = datetime.datetime.utcfromtimestamp(int(end_timestamp))
             if start_time <= now_plus_2_minutes:
-                if not description:
+                if MessageID_log.contains(start_ID) or not message:
                     continue
-                start_ID, message, role_name, end_ID = description.split(',')
-                role = discord.utils.get(bot.guilds[0].roles, name=role_name)
                 if role:
-                    formatted_string = f"{role.mention} {message} <t:{start_timestamp}:R>"
+                    formatted_string = f"{role.mention} {message} starts <t:{start_timestamp}:R>"
                     if role_name == 'bottesting':
                         channel_name = 'bot-testing'
                     else:
                         channel_name = 'general-chat'
                     channel = discord.utils.get(bot.guilds[0].text_channels, name=channel_name)
                     await channel.send(formatted_string)
+                    MessageID_log.enqueue(start_ID)
                     if 'tower of fantasy dailies' in summary:
                         tof.add_tof_dailies(start_time)
+                    MessageID_log.print()
 
             if end_time <= now_plus_2_minutes and end_timestamp != start_timestamp:
-                if not description:
+                if MessageID_log.contains(end_ID) or not message:
                     continue
-                start_ID, message, role_name, end_ID = description.split(',')
-                role = discord.utils.get(bot.guilds[0].roles, name=role_name)
                 if role:
-                    formatted_string = f"{role.mention} {message} ends  <t:{end_timestamp}:R>"
+                    formatted_string = f"{role.mention} {message} ends <t:{end_timestamp}:R>"
                     if role_name == 'bottesting':
                         channel_name = 'bot-testing'
                     else:
                         channel_name = 'general-chat'
                     channel = discord.utils.get(bot.guilds[0].text_channels, name=channel_name)
                     await channel.send(formatted_string)
+                    MessageID_log.enqueue(end_ID)
+                    MessageID_log.print()
 
 
 

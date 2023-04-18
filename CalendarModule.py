@@ -19,41 +19,22 @@ credentials = service_account.Credentials.from_service_account_file(
         SERVICE_ACCOUNT_FILE, scopes=SCOPES)
 
 async def add_test_event(start_time):
-    description = MessageID.generate_random_ID()
-    description += ',test event,bottesting,'
-    description += MessageID.generate_random_ID()
 
-    event = {
-        'summary': 'Sample Event',
-        'description': description,
-        'start': {
-            'dateTime': start_time.isoformat(),
-            'timeZone': 'UTC',
-        },
-        'end': {
-            'dateTime': start_time.isoformat(),
-            'timeZone': 'UTC',
-        }
-    }
+    await add_event(start_time, None, 'test event', 'test event body','bottesting')
 
-    try:
-        service = build('calendar', 'v3', credentials=credentials)
-        print("CALENDAR_ID:", CALENDAR_ID)
-        event = service.events().insert(calendarId=CALENDAR_ID, body=event).execute()
-        print(f'Event created: {event.get("htmlLink")}')
-    except HttpError as error:
-        print(f'An error occurred: {error}')
-        event = None
 
-    return event
-
-async def add_event(start_time, end_time=None, summary=None, description=None):
+async def add_event(start_time, end_time=None, summary=None, description=None, role=None):
     if end_time is None:
         end_time = start_time
 
+    random_id1 = MessageID.generate_random_ID()
+    random_id2 = MessageID.generate_random_ID()
+
+    event_description = '{},{},{},{}'.format(random_id1, description, role, random_id2)
+
     event = {
         'summary': summary or '',
-        'description': description or '',
+        'description': event_description or '',
         'start': {
             'dateTime': start_time.isoformat(),
             'timeZone': 'UTC',
@@ -107,7 +88,12 @@ async def get_events(start_time=None, end_time=None):
             start_timestamp = int(datetime.datetime.fromisoformat(start).timestamp())
             end_timestamp = int(datetime.datetime.fromisoformat(end).timestamp())
             description = event.get('description', '')
-            event_list.append({"summary": event['summary'], "start_timestamp": start_timestamp, "end_timestamp": end_timestamp, "description": description})
+            if description:
+                start_ID, message, role_name, end_ID = description.split(',')
+            else:
+                start_ID, message, role_name, end_ID = '', '', '', ''
+            event_list.append({"summary": event['summary'], "start_timestamp": start_timestamp, "end_timestamp": end_timestamp,
+                               "start_ID": start_ID, "message": message, "role_name": role_name, "end_ID": end_ID})
 
         return event_list
     except HttpError as error:
