@@ -41,8 +41,6 @@ async def add_test_event(start_time):
 
     return event
 
-
-
 async def add_event(start_time, end_time=None, summary=None, description=None):
     if end_time is None:
         end_time = start_time
@@ -71,6 +69,8 @@ async def add_event(start_time, end_time=None, summary=None, description=None):
 
     return event
 
+async def change_event(event_summary,date):
+    return None
 
 async def get_events(start_time=None, end_time=None):
     loop = asyncio.get_event_loop()

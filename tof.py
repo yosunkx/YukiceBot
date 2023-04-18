@@ -2,61 +2,37 @@ import os
 import asyncio
 import datetime
 import CalendarModule
+from dotenv import load_dotenv, set_key
 
-countersfile = 'tof_counters.txt'
+load_dotenv()
+raid_day = os.getenv('RAID_DAY') or '0'
+void_day = os.getenv('VOID_DAY') or '4'
+fch_day = os.getenv('FCH_DAY') or '5'
 
 async def add_tof_dailies(prev_time):
-    void_count, fch_count, raid_count = load_counters(countersfile)
     description = '1,JJ'
     start_time = prev_time + datetime.timedelta(hours = 24)
 
     # Get the current day of the week as an integer (0=Monday, 6=Sunday)
-    today = datetime.datetime.utcnow().weekday()
+    tomorrow = datetime.datetime.utcnow().weekday() + 1
 
-    if today == 6:
-        raid_count += 1
-
-    if today == 6 or today == 1 or today == 3:
-        void_count += 1
-
-    if today == 0 or today == 2 or today == 4:
-        fch_count += 1
-
-    if raid_count == 1:
+    if tomorrow == int(raid_day):
         description += '>raid'
-        raid_count = 0
+        set_key('.env', 'RAID_DAY', None)
 
-    if void_count == 3:
-        description += '>voidx3'
-        void_count = 0
+    if tomorrow == int(void_day):
+        description += '>void'
+        set_key('.env', 'VOID_DAY', None)
 
-    if fch_count == 3:
-        description += '>fchx3'
-        fch_count = 0
+    if tomorrow == int(fch_day):
+        description += '>fch'
+        set_key('.env', 'FCH_DAY', None)
 
-    description += ',tof'
+    description += ',ToF'
 
     CalendarModule.add_event(start_time, None, 'tower of fantasy dailies', description)
 
-    save_counters(void_count, fch_count, raid_count)
     return None
 
-def load_counters(filename):
-    void_count, fch_count, raid_count = 0, 0, 0
-    with open(filename, 'r') as f:
-        lines = f.readlines()
-    for line in lines:
-        name, value = line.strip().split(',')
-        if name == 'tof_void_count':
-            void_count = int(value)
-        elif name == 'tof_fch_count':
-            fch_count = int(value)
-        elif name == 'tof_raid_count':
-            raid_count = int(value)
-    return void_count, fch_count, raid_count
-
-def save_counters(void_count, fch_count, raid_count):
-    with open(countersfile, 'w') as file:
-        file.write(f'tof_void_count,{void_count}\n')
-        file.write(f'tof_fch_count,{fch_count}\n')
-        file.write(f'tof_raid_count,{raid_count}\n')
+async def tof_change_date(activity,new_date):
+    return None

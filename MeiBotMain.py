@@ -1,6 +1,5 @@
 import os
 import asyncio
-import openai
 import datetime
 from dotenv import load_dotenv
 import discord
@@ -11,11 +10,9 @@ import tof
 
 load_dotenv()
 DISCORD_API_KEY = os.getenv('DISCORD_BOT_TOKEN')
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix=commands.when_mentioned_or('!'), intents=intents)
-openai.api_key = OPENAI_API_KEY
 
 event_messages = {}
 
@@ -101,7 +98,10 @@ async def check_events():
                 role = discord.utils.get(bot.guilds[0].roles, name=role_name)
                 if role:
                     formatted_string = f"{role.mention} {message} <t:{start_timestamp}:R>"
-                    channel_name = 'bot-testing' if role_name == 'bottesting' else 'general-chat'
+                    if role_name == 'bottesting':
+                        channel_name = 'bot-testing'
+                    else:
+                        channel_name = 'general-chat'
                     channel = discord.utils.get(bot.guilds[0].text_channels, name=channel_name)
                     await channel.send(formatted_string)
                     if 'tower of fantasy dailies' in summary:
@@ -115,7 +115,10 @@ async def check_events():
                 role = discord.utils.get(bot.guilds[0].roles, name=role_name)
                 if role:
                     formatted_string = f"{role.mention} {message} ends  <t:{end_timestamp}:R>"
-                    channel_name = 'bot-testing' if role_name == 'bottesting' else 'general-chat'
+                    if role_name == 'bottesting':
+                        channel_name = 'bot-testing'
+                    else:
+                        channel_name = 'general-chat'
                     channel = discord.utils.get(bot.guilds[0].text_channels, name=channel_name)
                     await channel.send(formatted_string)
                     event_messages[description] = now
