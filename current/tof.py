@@ -11,7 +11,7 @@ void_day = os.getenv('VOID_DAY') or '4'
 fch_day = os.getenv('FCH_DAY') or '5'
 
 async def add_tof_dailies(prev_time):
-    description += 'JJ'
+    description = 'JJ'
     start_time = prev_time + datetime.timedelta(hours = 24)
 
     # Get the current day of the week as an integer (0=Monday, 6=Sunday)

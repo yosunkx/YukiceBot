@@ -24,7 +24,7 @@
   <ItemGroup>
     <Compile Include="CalendarModule.py" />
     <Compile Include="chatGPT.py" />
-    <Compile Include="MessageID.py">
+    <Compile Include="MessageLog.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tof.py" />

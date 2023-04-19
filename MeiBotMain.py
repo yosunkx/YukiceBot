@@ -8,7 +8,7 @@ from discord.ext import commands
 from discord.ext import tasks
 import CalendarModule
 import tof
-import MessageID
+import MessageLog
 import chatGPT
 
 load_dotenv()
@@ -17,7 +17,8 @@ DISCORD_API_KEY = os.getenv('DISCORD_BOT_TOKEN')
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix=commands.when_mentioned_or('!', '<@!1097341747459272845>'), intents=intents)
 
-MessageID_log = MessageID.MessageID()
+MessageID_log = MessageLog.MessageID()
+message_logs = MessageLog.MessageLogs()
 
 @bot.event
 async def on_ready():
@@ -28,6 +29,7 @@ async def on_ready():
 @bot.event
 async def on_message(message):
     if message.author == bot.user:
+        message_logs[message.channel.id].append({"role": "assistant", "content": message.content})
         return
 
     ctx = await bot.get_context(message)
@@ -42,6 +44,7 @@ async def on_message(message):
             # Check if the reply content starts with a valid command
             command_name = words[0]
             if command_name in bot.all_commands:
+                message_logs[message.channel.id].append({"role": "user", "content":  message.author.name + ": " + message.content})
                 # Set the message content to include the command arguments (excluding the command name)
                 message.content = " ".join(words[1:]) if len(words) > 1 else ""
 
@@ -54,7 +57,8 @@ async def on_message(message):
                 await bot.invoke(ctx)
                 return
             else:
-                await none_command(message.content, ctx)
+                message_logs[message.channel.id].append({"role": "user", "content":  message.author.name + ": " + message.content})
+                await none_command(message, ctx, message_logs[ctx.channel.id])
 
     # Process other messages
     if ctx.command is None:
@@ -64,12 +68,13 @@ async def on_message(message):
             prefixes = [prefixes]
         if any(message.content.startswith(prefix) for prefix in prefixes):
             # If the message starts with a mention of the bot
+            message_logs[message.channel.id].append({"role": "user", "content":  message.author.name + ": " + message.content})
             mention_prefix = f"<@{bot.user.id}>"
             user_message = message.content
             if user_message.startswith(mention_prefix):
                 user_message = user_message[len(mention_prefix):].strip()
             if user_message:
-                await none_command(user_message, ctx)
+                await none_command(message, ctx, message_logs[ctx.channel.id])
             return
         else:
             # If the message starts with a mention of the bot
@@ -77,10 +82,12 @@ async def on_message(message):
             if message.content.startswith(mention_prefix):
                 stripped_message = message.content[len(mention_prefix):].strip()
                 if stripped_message:
-                    await none_command(stripped_message)
+                    message_logs[message.channel.id].append({"role": "user", "content":  message.author.name + ": " + message.content})
+                    await none_command(message, ctx, message_logs[ctx.channel.id])
                     return
     else:
-        # If the message starts with a valid command, process it normally
+        # If the message starts with a valid command, process it 
+        message_logs[message.channel.id].append({"role": "user", "content":  message.author.name + ": " + message.content})
         await bot.process_commands(message)
 
 
@@ -171,8 +178,21 @@ async def check_events():
                     MessageID_log.print()
 
 
-async def none_command(message, ctx):
-    generated_message = await chatGPT.GPT_general(message)
+async def none_command(message, ctx, logs):
+    generated_message = await chatGPT.GPT_general(message.content, message.author.name, list(logs))
     await ctx.send(generated_message)
+
+
+@bot.command(name="print_log")
+async def print_log(ctx):
+    channel_id = ctx.channel.id
+
+    # Fetch the message logs for the current channel
+    logs = message_logs[channel_id]
+
+    # Print the message logs to the console
+    print("Message logs for channel:", channel_id)
+    for message in logs:
+        print(f"{message['role']}: {message['content']}")
 
 bot.run(DISCORD_API_KEY)
