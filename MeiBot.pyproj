@@ -33,6 +33,7 @@
   <ItemGroup>
     <Content Include=".env" />
     <Content Include="botsettings.txt" />
+    <Content Include="summary.txt" />
     <Content Include="todo.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />

@@ -10,6 +10,7 @@ import CalendarModule
 import tof
 import MessageLog
 import chatGPT
+import signal
 
 load_dotenv()
 DISCORD_API_KEY = os.getenv('DISCORD_BOT_TOKEN')
@@ -19,6 +20,8 @@ bot = commands.Bot(command_prefix=commands.when_mentioned_or('!', '<@!1097341747
 
 MessageID_log = MessageLog.MessageID()
 message_logs = MessageLog.MessageLogs()
+
+AUTHORIZED_USER_ID = 104055116897722368
 
 @bot.event
 async def on_ready():
@@ -96,7 +99,9 @@ async def on_message(message):
 async def add_test_event(ctx):
     start_time = datetime.datetime.utcnow() + datetime.timedelta(minutes=2)
     await CalendarModule.add_test_event(start_time)
-    await ctx.send(f"event added at {start_time.strftime('%Y-%m-%d %H:%M')}")
+    bot_message = f"event added at {start_time.strftime('%Y-%m-%d %H:%M')}"
+    GPT_message = await chatGPT.GPT_prompt(None, "add_test_event")
+    await ctx.send(GPT_message + "\n" + bot_message)
 
 
 @bot.command()
@@ -120,7 +125,8 @@ async def events(ctx, end_date: str = None):
             formatted_strings.append(formatted_string)
 
         output_string = '\n'.join(formatted_strings)
-        await ctx.send(output_string) 
+        GPT_message = await chatGPT.GPT_prompt(None, "events")
+        await ctx.send(GPT_message + "\n" + output_string)
 
 
 @tasks.loop(minutes=1)
@@ -157,7 +163,8 @@ async def check_events():
                     else:
                         channel_name = 'general-chat'
                     channel = discord.utils.get(bot.guilds[0].text_channels, name=channel_name)
-                    await channel.send(formatted_string)
+                    GPT_message = await chatGPT.GPT_prompt(formatted_string, "check_events")
+                    await channel.send(GPT_message + "\n" + formatted_string)
                     MessageID_log.enqueue(start_ID)
                     if 'tower of fantasy dailies' in summary:
                         await tof.add_tof_dailies(start_time)
@@ -173,15 +180,40 @@ async def check_events():
                     else:
                         channel_name = 'general-chat'
                     channel = discord.utils.get(bot.guilds[0].text_channels, name=channel_name)
-                    await channel.send(formatted_string)
+                    GPT_message = await chatGPT.GPT_prompt(formatted_string, "check_events")
+                    await channel.send(GPT_message + "\n" + formatted_string)
                     MessageID_log.enqueue(end_ID)
                     MessageID_log.print()
 
 
 async def none_command(message, ctx, logs):
     generated_message = await chatGPT.GPT_general(message.content, message.author.name, list(logs))
-    await ctx.send(generated_message)
 
+    if generated_message.strip().startswith("!"):
+        #print("gpt output starts with !")
+        command_message = generated_message.split()[0][1:]  # Remove the '!' from the command
+        command_message = command_message[0] + command_message[1:].replace(".", "")
+        words = command_message.split()
+        command = words[0]
+        args = generated_message.split()[1:]  # Get the arguments, if any
+        # Check if the command exists and invoke it
+        if command in bot.all_commands:
+            cmd_obj = bot.get_command(command)
+            ctx = await bot.get_context(message)
+            #print("invoking command")
+            await ctx.invoke(cmd_obj, *args)
+        else:
+            #print("not valid command, output as normal message")
+            await ctx.send(command_message)
+    else:
+        #print("normal message")
+        await ctx.send(generated_message)
+
+
+def signal_handler(signal, frame):
+    print("Stopping the bot...")
+    loop = asyncio.get_event_loop()
+    loop.stop()
 
 @bot.command(name="print_log")
 async def print_log(ctx):
@@ -195,4 +227,28 @@ async def print_log(ctx):
     for message in logs:
         print(f"{message['role']}: {message['content']}")
 
+
+@bot.command()
+async def close_bot(ctx):
+    # Check if the user's ID matches the authorized userID
+    if ctx.author.id != AUTHORIZED_USER_ID:
+        await ctx.send("You do not have permission to use this command.")
+        return
+
+    # Collect all logs from the MessageLogs object into a single list
+    all_logs = []
+    for key in message_logs._data.keys():
+        logs = [message["content"] for message in message_logs.get_messages(key)]
+        all_logs.extend(logs)
+
+    # Call GPT_log_summary with the collected logs
+    await chatGPT.GPT_log_summary(all_logs)
+
+    # Send a message to notify that the bot will be closed
+    await ctx.send("The bot will now close.")
+
+    # Use the custom signal handler to close the bot
+    os.kill(os.getpid(), signal.SIGINT)
+
+signal.signal(signal.SIGINT, signal_handler)
 bot.run(DISCORD_API_KEY)

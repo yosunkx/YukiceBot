@@ -8,7 +8,7 @@ from google.oauth2 import service_account
 from googleapiclient.errors import HttpError
 from googleapiclient.discovery import build
 import datetime
-import MessageID
+import MessageLog
 
 SERVICE_ACCOUNT_FILE = 'C:/Users/Kevin/Documents/YukiceBot/meibot-384017-177d6e3bc3bb.json'
 SCOPES = ['https://www.googleapis.com/auth/calendar']
@@ -27,8 +27,8 @@ async def add_event(start_time, end_time=None, summary=None, description=None, r
     if end_time is None:
         end_time = start_time
 
-    random_id1 = MessageID.generate_random_ID()
-    random_id2 = MessageID.generate_random_ID()
+    random_id1 = MessageLog.generate_random_ID()
+    random_id2 = MessageLog.generate_random_ID()
 
     event_description = '{},{},{},{}'.format(random_id1, description, role, random_id2)
 
