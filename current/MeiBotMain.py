@@ -9,7 +9,6 @@ from discord.ext import tasks
 import CalendarModule
 import tof
 import MessageID
-import chatGPT
 
 load_dotenv()
 DISCORD_API_KEY = os.getenv('DISCORD_BOT_TOKEN')
@@ -54,7 +53,7 @@ async def on_message(message):
                 await bot.invoke(ctx)
                 return
             else:
-                await none_command(message.content, ctx)
+                await none_command(message.content)
 
     # Process other messages
     if ctx.command is None:
@@ -69,7 +68,7 @@ async def on_message(message):
             if user_message.startswith(mention_prefix):
                 user_message = user_message[len(mention_prefix):].strip()
             if user_message:
-                await none_command(user_message, ctx)
+                await none_command(user_message)
             return
         else:
             # If the message starts with a mention of the bot
@@ -153,7 +152,7 @@ async def check_events():
                     await channel.send(formatted_string)
                     MessageID_log.enqueue(start_ID)
                     if 'tower of fantasy dailies' in summary:
-                        await tof.add_tof_dailies(start_time)
+                        tof.add_tof_dailies(start_time)
                     MessageID_log.print()
 
             if end_time <= now_plus_2_minutes and end_timestamp != start_timestamp:
@@ -171,8 +170,7 @@ async def check_events():
                     MessageID_log.print()
 
 
-async def none_command(message, ctx):
-    generated_message = await chatGPT.GPT_general(message)
-    await ctx.send(generated_message)
+async def none_command(message):
+    print(message)
 
 bot.run(DISCORD_API_KEY)

@@ -1,0 +1,3 @@
+@echo off
+cd C:\Users\Kevin\Documents\YukiceBot\current
+python MeiBotMain.py
