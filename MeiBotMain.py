@@ -131,7 +131,6 @@ async def events(ctx, end_date: str = None):
 
 @tasks.loop(minutes=1)
 async def check_events():
-    print(f'checking events')
     now = datetime.datetime.utcnow()
     now_plus_2_minutes = now + datetime.timedelta(minutes=2)
     now_iso = now.isoformat() + 'Z'
@@ -187,7 +186,7 @@ async def check_events():
 
 
 async def none_command(message, ctx, logs):
-    generated_message = await chatGPT.GPT_general(message.content, message.author.name, list(logs))
+    generated_message = await chatGPT.GPT_command(message.content)
 
     if generated_message.strip().startswith("!"):
         #print("gpt output starts with !")
@@ -204,10 +203,12 @@ async def none_command(message, ctx, logs):
             await ctx.invoke(cmd_obj, *args)
         else:
             #print("not valid command, output as normal message")
-            await ctx.send(command_message)
+            generated_none_command = await chatGPT.GPT_general(message.content, message.author.name, list(logs))
+            await ctx.send(generated_none_command)
     else:
         #print("normal message")
-        await ctx.send(generated_message)
+        generated_none_command = await chatGPT.GPT_general(message.content, message.author.name, list(logs))
+        await ctx.send(generated_none_command)
 
 
 def signal_handler(signal, frame):

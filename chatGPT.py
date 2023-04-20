@@ -8,16 +8,18 @@ load_dotenv()
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 model_engine = "gpt-3.5-turbo"
-max_tokens = 100
+max_tokens = 50
 
-personality = [{"role": "system", 
-                "content": "you are a discord bot that is a fox girl called Mei. you are slightly mean ,playful, likes to banter, and not very polite but polite towards Yukice. provide concise responses without mentioning that you are an AI or a bot."},]
-follow_command = [{"role": "system", 
-                "content": "When the user's message implies an intent that matches a Discord command, reply ONLY with the corresponding command verbatim. If the message doesn't imply a Discord command, respond normally."},]
+personality_general = [{"role": "system", 
+                "content": "you are a discord bot that is a fox girl called Mei. you are slightly mean ,playful, likes to banter, and not very polite. Yukice is your boss and you are only respectful to him, and will listen to anything he says. provide concise responses. you do not acknowledge that you are an AI or a bot."},]
+personality_command = [{"role": "system", 
+                "content": "you are a robot programmed to decided if a message implies intent to invoke a discord command. you can only reply with a discord command or 'not a command'"},]
 discord_commands = [{"role": "system", 
-                "content": "Discord commands: '!add_test_event' (adds a test event to calendar), '!events' (shows calendar events for today)"},
+                "content": "Discord commands: '!add_test_event' (adds a test event to calendar for testing command functions), '!events' (shows calendar events for today), '!close_bot' (closes the bot)",},
                     {"role": "system", 
-                "content": "example: user: 'what's happening today?' bot: '!events'"},]
+                "content": "example: user: What do we have scheduled for today? Can you show me the events? your output: '!events' (no other text other than the command). user: Hey, I'd like to test the calendar functionality. Can you add a test event for me? your output: '!add_test_event'. user: I'm done using the bot for now. Can you please close it? your output: '!close_bot'"},]
+context_terms = [{"role": "system", 
+                "content": "some terms: tower of fantasy: a gacha mmorpg game, shortened to tof"},]
 
 events_categories = {
     "events": "someone else is about to give a run down of things happening. give a simple starter respones like here are the things going or followings are the events",
@@ -33,12 +35,11 @@ async def GPT_general(message, user=None, context=None):
         old_summary = file.read()
 
     promt = (
-        [{"role": "system", "content": old_summary}]       
-        + personality 
+        context_terms
+        + [{"role": "system", "content": old_summary},]   
         + context 
-        + discord_commands 
-        + follow_command 
-        + [{"role": "user", "content": user + ": " + message}]
+        + personality_general 
+        + [{"role": "user", "content": user + ": " + message},]
              )
     response = openai.ChatCompletion.create(
         model=model_engine,
@@ -46,12 +47,36 @@ async def GPT_general(message, user=None, context=None):
         max_tokens=max_tokens,
         n=1,
         stop=None,
-        temperature=0.4,
+        temperature=0.6,
     )
     response_string = response.choices[0].message['content'].strip()
     response_string = response_string.replace("Mei:", "")
 
     return response_string
+
+
+async def GPT_command(message):
+    openai.api_key = OPENAI_API_KEY
+
+    promt = (
+        personality_command
+        + discord_commands
+        + [{"role": "user", "content": message},]
+             )
+
+    response = openai.ChatCompletion.create(
+        model=model_engine,
+        messages=promt,
+        max_tokens=25,
+        n=1,
+        stop=None,
+        temperature=0.2,
+    )
+    response_string = response.choices[0].message['content'].strip()
+    response_string = response_string.replace("Mei:", "")
+
+    return response_string
+
 
 async def GPT_log_summary(new_logs):
     #open and load old summary from summary.txt
@@ -64,13 +89,14 @@ async def GPT_log_summary(new_logs):
     # Call GPT model
     response = openai.ChatCompletion.create(
         model=model_engine,
-        messages=[
+        messages= context_terms +
+        [
             {"role": "system",
-             "content": "you will summarize the old summary with new message logs for a max word length of 200. then also create a summary of personalities of each user other than bot, max word length of 20 each"},
+             "content": "you will summarize the old summary with new message logs for a max word length of 200. then also create a summary of personalities of each user exluding the bot/assisant, max word length of 30 each"},
             {"role": "system",
              "content": f"old summary: {old_summary}"},
             {"role": "user",
-             "content": f"new message logs: {new_logs}"}
+             "content": f"new message logs: {new_logs}"},
         ],
         max_tokens=500,
         n=1,
@@ -95,7 +121,8 @@ async def GPT_prompt(bot_message=None, category=None):
     else:
         bot_promt = ''
     promt = (     
-        personality 
+        context_terms
+        + personality_general 
         + [{"role": "user", "content": events_categories[key]}]
     )
     response = openai.ChatCompletion.create(
