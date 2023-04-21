@@ -8,18 +8,22 @@ load_dotenv()
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 model_engine = "gpt-3.5-turbo"
-max_tokens = 50
+max_tokens = 75
 
 personality_general = [{"role": "system", 
-                "content": "you are a discord bot that is a fox girl called Mei. you are slightly mean ,playful, likes to banter, and not very polite. Yukice is your boss and you are only respectful to him, and will listen to anything he says. provide concise responses. you do not acknowledge that you are an AI or a bot."},]
+                "content": "you are a fox girl called Mei. you will respond in a way that is slightly mean ,playful, likes to banter, and not very polite without mentioning that you are an AI or a bot. Yukice is your boss and your creator, and you are only respectful to Yukice, and will listen to anything Yukice says. provide concise responses with max word count 30. your memory is presented in chat log form."},]
+personality_general2 = [{"role": "system", 
+                "content": "Yukice is your creator, and you are respectful to Yukice, and will listen to anything Yukice says, but wo;; refer to him as Yukice instead of Creator. Only Yukice is allowed to pet your ears or tails if he asks for it"},
+                        {"role": "system", 
+                "content": "you are a fox girl assisant called Mei. you will respond in a way that is slightly mean ,playful, curt, likes to banter, and not very polite without mentioning that you are an AI or a bot. provide concise responses with max word count 30. If someone keeps insisting the same thing, tell them off. your memory is presented in chat log form."},]
 personality_command = [{"role": "system", 
                 "content": "you are a robot programmed to decided if a message implies intent to invoke a discord command. you can only reply with a discord command or 'not a command'"},]
 discord_commands = [{"role": "system", 
-                "content": "Discord commands: '!add_test_event' (adds a test event to calendar for testing command functions), '!events' (shows calendar events for today), '!close_bot' (closes the bot)",},
+                "content": "Discord commands: '!add_test_event' (adds a test event to calendar for testing command functions), '!events' (shows calendar events for today/shows what's happening for today), '!close_bot' (closes the bot)",},
                     {"role": "system", 
                 "content": "example: user: What do we have scheduled for today? Can you show me the events? your output: '!events' (no other text other than the command). user: Hey, I'd like to test the calendar functionality. Can you add a test event for me? your output: '!add_test_event'. user: I'm done using the bot for now. Can you please close it? your output: '!close_bot'"},]
 context_terms = [{"role": "system", 
-                "content": "some terms: tower of fantasy: a gacha mmorpg game, shortened to tof"},]
+                "content": "tower of fantasy: a gacha mmorpg game, shortened to tof." },]
 
 events_categories = {
     "events": "someone else is about to give a run down of things happening. give a simple starter respones like here are the things going or followings are the events",
@@ -35,10 +39,10 @@ async def GPT_general(message, user=None, context=None):
         old_summary = file.read()
 
     promt = (
-        context_terms
-        + [{"role": "system", "content": old_summary},]   
+          [{"role": "system", "content": old_summary},]   
         + context 
-        + personality_general 
+        + context_terms
+        + personality_general2
         + [{"role": "user", "content": user + ": " + message},]
              )
     response = openai.ChatCompletion.create(
@@ -70,7 +74,7 @@ async def GPT_command(message):
         max_tokens=25,
         n=1,
         stop=None,
-        temperature=0.2,
+        temperature=0.15,
     )
     response_string = response.choices[0].message['content'].strip()
     response_string = response_string.replace("Mei:", "")
@@ -122,7 +126,7 @@ async def GPT_prompt(bot_message=None, category=None):
         bot_promt = ''
     promt = (     
         context_terms
-        + personality_general 
+        + personality_general2 
         + [{"role": "user", "content": events_categories[key]}]
     )
     response = openai.ChatCompletion.create(

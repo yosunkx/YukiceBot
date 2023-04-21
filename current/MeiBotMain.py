@@ -32,7 +32,7 @@ async def on_ready():
 @bot.event
 async def on_message(message):
     if message.author == bot.user:
-        message_logs[message.channel.id].append({"role": "assistant", "content": message.content})
+        message_logs[message.guild.id].append({"role": "assistant", "content": message.content})
         return
 
     ctx = await bot.get_context(message)
@@ -47,7 +47,7 @@ async def on_message(message):
             # Check if the reply content starts with a valid command
             command_name = words[0]
             if command_name in bot.all_commands:
-                message_logs[message.channel.id].append({"role": "user", "content":  message.author.name + ": " + message.content})
+                message_logs[message.guild.id].append({"role": "user", "content":  message.author.name + ": " + message.content})
                 # Set the message content to include the command arguments (excluding the command name)
                 message.content = " ".join(words[1:]) if len(words) > 1 else ""
 
@@ -60,7 +60,7 @@ async def on_message(message):
                 await bot.invoke(ctx)
                 return
             else:
-                message_logs[message.channel.id].append({"role": "user", "content":  message.author.name + ": " + message.content})
+                message_logs[message.guild.id].append({"role": "user", "content":  message.author.name + ": " + message.content})
                 await none_command(message, ctx, message_logs[ctx.channel.id])
 
     # Process other messages
@@ -71,7 +71,7 @@ async def on_message(message):
             prefixes = [prefixes]
         if any(message.content.startswith(prefix) for prefix in prefixes):
             # If the message starts with a mention of the bot
-            message_logs[message.channel.id].append({"role": "user", "content":  message.author.name + ": " + message.content})
+            message_logs[message.guild.id].append({"role": "user", "content":  message.author.name + ": " + message.content})
             mention_prefix = f"<@{bot.user.id}>"
             user_message = message.content
             if user_message.startswith(mention_prefix):
@@ -85,12 +85,12 @@ async def on_message(message):
             if message.content.startswith(mention_prefix):
                 stripped_message = message.content[len(mention_prefix):].strip()
                 if stripped_message:
-                    message_logs[message.channel.id].append({"role": "user", "content":  message.author.name + ": " + message.content})
+                    message_logs[message.guild.id].append({"role": "user", "content":  message.author.name + ": " + message.content})
                     await none_command(message, ctx, message_logs[ctx.channel.id])
                     return
     else:
         # If the message starts with a valid command, process it 
-        message_logs[message.channel.id].append({"role": "user", "content":  message.author.name + ": " + message.content})
+        message_logs[message.guild.id].append({"role": "user", "content":  message.author.name + ": " + message.content})
         await bot.process_commands(message)
 
 

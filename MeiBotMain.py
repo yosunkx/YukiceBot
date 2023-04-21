@@ -6,8 +6,9 @@ from dotenv import load_dotenv
 import discord
 from discord.ext import commands
 from discord.ext import tasks
-import CalendarModule
-import tof
+import modules
+import modules.CalendarModule as CalenderModule
+import modules.tof as tof
 import MessageLog
 import chatGPT
 import signal
@@ -23,6 +24,8 @@ message_logs = MessageLog.MessageLogs()
 
 AUTHORIZED_USER_ID = 104055116897722368
 
+modules.setup_all_modules(bot)
+
 @bot.event
 async def on_ready():
     print('Logged in as {0.user}'.format(bot))
@@ -32,8 +35,10 @@ async def on_ready():
 @bot.event
 async def on_message(message):
     if message.author == bot.user:
-        message_logs[message.channel.id].append({"role": "assistant", "content": message.content})
+        message_logs[message.guild.id].append({"role": "assistant", "content": message.content})
         return
+    else:
+        message_logs[message.guild.id].append({"role": "user", "content":  message.author.name + ": " + message.content})
 
     ctx = await bot.get_context(message)
 
@@ -47,7 +52,6 @@ async def on_message(message):
             # Check if the reply content starts with a valid command
             command_name = words[0]
             if command_name in bot.all_commands:
-                message_logs[message.channel.id].append({"role": "user", "content":  message.author.name + ": " + message.content})
                 # Set the message content to include the command arguments (excluding the command name)
                 message.content = " ".join(words[1:]) if len(words) > 1 else ""
 
@@ -60,7 +64,6 @@ async def on_message(message):
                 await bot.invoke(ctx)
                 return
             else:
-                message_logs[message.channel.id].append({"role": "user", "content":  message.author.name + ": " + message.content})
                 await none_command(message, ctx, message_logs[ctx.channel.id])
 
     # Process other messages
@@ -71,7 +74,6 @@ async def on_message(message):
             prefixes = [prefixes]
         if any(message.content.startswith(prefix) for prefix in prefixes):
             # If the message starts with a mention of the bot
-            message_logs[message.channel.id].append({"role": "user", "content":  message.author.name + ": " + message.content})
             mention_prefix = f"<@{bot.user.id}>"
             user_message = message.content
             if user_message.startswith(mention_prefix):
@@ -85,12 +87,10 @@ async def on_message(message):
             if message.content.startswith(mention_prefix):
                 stripped_message = message.content[len(mention_prefix):].strip()
                 if stripped_message:
-                    message_logs[message.channel.id].append({"role": "user", "content":  message.author.name + ": " + message.content})
                     await none_command(message, ctx, message_logs[ctx.channel.id])
                     return
     else:
         # If the message starts with a valid command, process it 
-        message_logs[message.channel.id].append({"role": "user", "content":  message.author.name + ": " + message.content})
         await bot.process_commands(message)
 
 
@@ -98,7 +98,7 @@ async def on_message(message):
 @bot.command()
 async def add_test_event(ctx):
     start_time = datetime.datetime.utcnow() + datetime.timedelta(minutes=2)
-    await CalendarModule.add_test_event(start_time)
+    await CalenderModule.add_test_event(start_time)
     bot_message = f"event added at {start_time.strftime('%Y-%m-%d %H:%M')}"
     GPT_message = await chatGPT.GPT_prompt(None, "add_test_event")
     await ctx.send(GPT_message + "\n" + bot_message)
@@ -115,7 +115,7 @@ async def events(ctx, end_date: str = None):
         except ValueError:
             end_time = None
 
-    events = await CalendarModule.get_events(end_time=end_time)
+    events = await CalenderModule.get_events(end_time=end_time)
     if not events:
         await ctx.send('no upcomming events')
     else:
@@ -135,7 +135,7 @@ async def check_events():
     now_plus_2_minutes = now + datetime.timedelta(minutes=2)
     now_iso = now.isoformat() + 'Z'
     now_plus_2_minutes_iso = now_plus_2_minutes.isoformat() + 'Z'
-    events = await CalendarModule.get_events(now_iso, now_plus_2_minutes_iso)
+    events = await CalenderModule.get_events(now_iso, now_plus_2_minutes_iso)
 
     if events:
         print('event detected')
@@ -236,14 +236,7 @@ async def close_bot(ctx):
         await ctx.send("You do not have permission to use this command.")
         return
 
-    # Collect all logs from the MessageLogs object into a single list
-    all_logs = []
-    for key in message_logs._data.keys():
-        logs = [message["content"] for message in message_logs.get_messages(key)]
-        all_logs.extend(logs)
-
-    # Call GPT_log_summary with the collected logs
-    await chatGPT.GPT_log_summary(all_logs)
+    message_logs.save_logs
 
     # Send a message to notify that the bot will be closed
     await ctx.send("The bot will now close.")
