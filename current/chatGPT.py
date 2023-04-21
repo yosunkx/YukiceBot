@@ -83,35 +83,25 @@ async def GPT_command(message):
 
 
 async def GPT_log_summary(new_logs):
-    #open and load old summary from summary.txt
-    if os.path.exists("summary.txt"):
-        with open("summary.txt", "r") as f:
-            old_summary = f.read()
-    else:
-        old_summary = ""
+
     openai.api_key = OPENAI_API_KEY
-    # Call GPT model
+
     response = openai.ChatCompletion.create(
         model=model_engine,
         messages= context_terms +
         [
             {"role": "system",
-             "content": "you will summarize the old summary with new message logs for a max word length of 200. then also create a summary of personalities of each user exluding the bot/assisant, max word length of 30 each"},
-            {"role": "system",
-             "content": f"old summary: {old_summary}"},
+             "content": "Summarize the previous summary and new message logs, focusing on dynamics and notable events, with a maximum word length of 250. Also, create a brief summary of each user's personality, excluding the bot/assistant called Mei, with a maximum word length of 50 for each user."},
             {"role": "user",
-             "content": f"new message logs: {new_logs}"},
+             "content": f"{new_logs}"},
         ],
-        max_tokens=500,
+        max_tokens=1000,
         n=1,
         stop=None,
         temperature=0.3,
     )
     response_string = response.choices[0].message['content'].strip()
-
-    # Save response_string to summary.txt
-    with open("summary.txt", "w") as f:
-        f.write(response_string)
+    return response_string
 
 
 async def GPT_prompt(bot_message=None, category=None):
@@ -126,7 +116,7 @@ async def GPT_prompt(bot_message=None, category=None):
         bot_promt = ''
     promt = (     
         context_terms
-        + personality_general2 
+        + personality_general 
         + [{"role": "user", "content": events_categories[key]}]
     )
     response = openai.ChatCompletion.create(
@@ -142,4 +132,21 @@ async def GPT_prompt(bot_message=None, category=None):
         response_string = response_string[1:]
     if response_string.endswith('"'):
         response_string = response_string[:-1]
+    return response_string
+
+
+async def GPT_generate(prompt, temperature):
+    openai.api_key = OPENAI_API_KEY
+
+    response = openai.ChatCompletion.create(
+        model=model_engine,
+        messages=prompt,
+        max_tokens=max_tokens,
+        n=1,
+        stop=None,
+        temperature=temperature
+    )
+    response_string = response.choices[0].message['content'].strip()
+    response_string = response_string.replace("Mei:", "")
+
     return response_string

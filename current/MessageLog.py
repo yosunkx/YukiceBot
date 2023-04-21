@@ -3,6 +3,7 @@ import random
 import string
 import chatGPT
 import os
+import json
 
 def generate_random_ID():
     return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(6))
@@ -50,31 +51,27 @@ class MessageLogs:
     def __init__(self, token_limit=1000):
         self._data = {}
         self.token_limit = token_limit
+        self.load_logs()
 
     def _token_count(self, messages):
         return sum(len(message["content"].split()) for message in messages)
 
-    def _overall_token_count(self):
-        return sum(self._token_count(channel_data['deque']) for channel_data in self._data.values())
-
-
     def _truncate_and_summarize(self, key):
         half_length = self.token_limit // 2
         messages_to_summarize = []
-        for key in self._data:
-            # Dequeue messages until roughly half of the token limit is reached
-            while self._token_count(self._data[key]['deque']) > half_length // len(self._data):
-                messages_to_summarize.append(self._data[key]['deque'].popleft())
+        while self._token_count(self._data[key]['deque']) > half_length:
+            messages_to_summarize.append(self._data[key]['deque'].popleft())
 
-        chatGPT.GPT_log_summary(messages_to_summarize)
+        summary = chatGPT.GPT_log_summary(messages_to_summarize)
+        self._data[key]['deque'].appendleft({'role': 'summary', 'content': summary})
+        self.save_logs()
 
     def append(self, key, message):
         if key not in self._data:
             self._data[key] = {'deque': deque()}
 
-        # Check if the overall token count exceeds the token limit
-        if (self._overall_token_count() + len(message["content"].split())) > self.token_limit:
-            self._truncate_and_summarize()
+        if (self._token_count(self._data[key]['deque']) + len(message["content"].split())) > self.token_limit:
+            self._truncate_and_summarize(key)
 
         self._data[key]['deque'].append(message)
 
@@ -88,5 +85,24 @@ class MessageLogs:
 
     def __getitem__(self, key):
         if key not in self._data:
-            self._data[key] = deque()
+            self._data[key] = {'deque': deque()}
         return self._data[key]
+
+    def save_logs(self):
+        if not os.path.exists('memory'):
+            os.mkdir('memory')
+
+        for key, data in self._data.items():
+            with open(f'memory/{key}.txt', 'w', encoding='utf-8') as f:
+                json.dump(list(data['deque']), f)
+
+    def load_logs(self):
+        if not os.path.exists('memory'):
+            return
+
+        for filename in os.listdir('memory'):
+            if filename.endswith('.txt'):
+                key = filename[:-4]
+                with open(f'memory/{filename}', 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    self._data[key] = {'deque': deque(data)}

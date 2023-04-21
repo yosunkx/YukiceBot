@@ -34,11 +34,14 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
-    if message.author == bot.user:
-        message_logs[message.guild.id].append({"role": "assistant", "content": message.content})
-        return
-    else:
-        message_logs[message.guild.id].append({"role": "user", "content":  message.author.name + ": " + message.content})
+    blacklisted_category_ids = [1053529567647768628]  # Replace with actual category IDs
+
+    if message.channel.category_id not in blacklisted_category_ids:
+        if message.author == bot.user:
+            message_logs.append(message.guild.id, {"role": "assistant", "content": message.content})
+            return
+        else:
+            message_logs.append(message.guild.id, {"role": "user", "content": message.author.name + ": " + message.content})
 
     ctx = await bot.get_context(message)
 
