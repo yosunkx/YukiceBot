@@ -38,10 +38,10 @@ async def on_message(message):
 
     if message.channel.category_id not in blacklisted_category_ids:
         if message.author == bot.user:
-            message_logs[message.guild.id].append({"role": "assistant", "content": message.content})
+            message_logs.append(message.guild.id, {"role": "assistant", "content": message.content})
             return
         else:
-            message_logs[message.guild.id].append({"role": "user", "content": message.author.name + ": " + message.content})
+            message_logs.append(message.guild.id, {"role": "user", "content": message.author.name + ": " + message.content})
 
     ctx = await bot.get_context(message)
 
@@ -67,7 +67,7 @@ async def on_message(message):
                 await bot.invoke(ctx)
                 return
             else:
-                await none_command(message, ctx, message_logs[ctx.channel.id])
+                await none_command(message, ctx, list(message_logs.get_messages(ctx.guild.id)['deque']))
 
     # Process other messages
     if ctx.command is None:
@@ -82,7 +82,7 @@ async def on_message(message):
             if user_message.startswith(mention_prefix):
                 user_message = user_message[len(mention_prefix):].strip()
             if user_message:
-                await none_command(message, ctx, message_logs[ctx.channel.id])
+                await none_command(message, ctx, list(message_logs.get_messages(ctx.guild.id)['deque']))
             return
         else:
             # If the message starts with a mention of the bot
@@ -90,7 +90,7 @@ async def on_message(message):
             if message.content.startswith(mention_prefix):
                 stripped_message = message.content[len(mention_prefix):].strip()
                 if stripped_message:
-                    await none_command(message, ctx, message_logs[ctx.channel.id])
+                    await none_command(message, ctx, list(message_logs.get_messages(ctx.guild.id)['deque']))
                     return
     else:
         # If the message starts with a valid command, process it 
@@ -214,22 +214,23 @@ async def none_command(message, ctx, logs):
         await ctx.send(generated_none_command)
 
 
+@bot.command(name="print_log")
+async def print_log(ctx):
+    guild_id = ctx.guild.id
+
+    # Fetch the message logs for the current server
+    logs = message_logs.get_messages(guild_id)['deque']
+
+    # Print the message logs to the console
+    print("Message logs for server:", guild_id)
+    for message in logs:
+        print(f"{message['role']}: {message['content']}")
+
+        
 def signal_handler(signal, frame):
     print("Stopping the bot...")
     loop = asyncio.get_event_loop()
     loop.stop()
-
-@bot.command(name="print_log")
-async def print_log(ctx):
-    channel_id = ctx.channel.id
-
-    # Fetch the message logs for the current channel
-    logs = message_logs[channel_id]
-
-    # Print the message logs to the console
-    print("Message logs for channel:", channel_id)
-    for message in logs:
-        print(f"{message['role']}: {message['content']}")
 
 
 @bot.command()
@@ -239,10 +240,12 @@ async def close_bot(ctx):
         await ctx.send("You do not have permission to use this command.")
         return
 
-    message_logs.save_logs
+    message_logs.save_logs()
 
     # Send a message to notify that the bot will be closed
     await ctx.send("The bot will now close.")
+
+    await asyncio.sleep(1)
 
     # Use the custom signal handler to close the bot
     os.kill(os.getpid(), signal.SIGINT)

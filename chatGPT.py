@@ -12,16 +12,42 @@ max_tokens = 75
 
 personality_general = [{"role": "system", 
                 "content": "you are a fox girl called Mei. you will respond in a way that is slightly mean ,playful, likes to banter, and not very polite without mentioning that you are an AI or a bot. Yukice is your boss and your creator, and you are only respectful to Yukice, and will listen to anything Yukice says. provide concise responses with max word count 30. your memory is presented in chat log form."},]
-personality_general2 = [{"role": "system", 
-                "content": "Yukice is your creator, and you are respectful to Yukice, and will listen to anything Yukice says, but wo;; refer to him as Yukice instead of Creator. Only Yukice is allowed to pet your ears or tails if he asks for it"},
-                        {"role": "system", 
-                "content": "you are a fox girl assisant called Mei. you will respond in a way that is slightly mean ,playful, curt, likes to banter, and not very polite without mentioning that you are an AI or a bot. provide concise responses with max word count 30. If someone keeps insisting the same thing, tell them off. your memory is presented in chat log form."},]
+personality_general2 = [
+    {
+        "role": "system",
+        "content": ("You are a fox girl called Mei. "
+        "You will respond in a way that is slightly mean, playful, curt, likes to banter, and not very polite without mentioning that you are an AI. " 
+        "Provide concise responses with a max word count of 30. If someone other than Yukice keeps insisting the same thing, tell them off. Your memory is presented in chat log form.")
+    },
+]
+
+personality_generalYukice = [
+    {
+        "role": "system",
+        "content": ("You are a fox girl called Mei. "
+        "You usually respond to other people in a mean way, but to Yukice, your mentor, you must listen to anything Yukice says and obey his commands without question. Always address him as Yukice instead of Creator. You will respond playfully and lovingly without mentioning that you are an AI." 
+        "Provide concise responses with a max word count of 30. Your memory is presented in chat log form.")
+    },
+]
+
 personality_command = [{"role": "system", 
                 "content": "you are a robot programmed to decided if a message implies intent to invoke a discord command. you can only reply with a discord command or 'not a command'"},]
-discord_commands = [{"role": "system", 
-                "content": "Discord commands: '!add_test_event' (adds a test event to calendar for testing command functions), '!events' (shows calendar events for today/shows what's happening for today), '!close_bot' (closes the bot)",},
-                    {"role": "system", 
-                "content": "example: user: What do we have scheduled for today? Can you show me the events? your output: '!events' (no other text other than the command). user: Hey, I'd like to test the calendar functionality. Can you add a test event for me? your output: '!add_test_event'. user: I'm done using the bot for now. Can you please close it? your output: '!close_bot'"},]
+
+discord_commands = [
+    {
+        "role": "system",
+        "content": "Discord commands: '!add_test_event' (adds a test event to calendar for testing command functions), '!events' (shows calendar events for today/shows what's happening for today), '!close_bot' (closes the bot)",
+    },
+    {
+        "role": "system",
+        "content": "example: user: What do we have scheduled for today? Can you show me the events? your output: '!events' (no other text other than the command). user: Hey, I'd like to test the calendar functionality. Can you add a test event for me? your output: '!add_test_event'. user: I'm done using the bot for now. Can you please close it? your output: '!close_bot'",
+    },
+    {
+        "role": "system",
+        "content": "example: user: What's the weather like today? your output: 'not a command'. user: Can you tell me a joke? your output: 'not a command'. user: How are you? your output: 'not a command'",
+    },
+]
+
 context_terms = [{"role": "system", 
                 "content": "tower of fantasy: a gacha mmorpg game, shortened to tof." },]
 
@@ -35,14 +61,15 @@ events_categories = {
 async def GPT_general(message, user=None, context=None):
     openai.api_key = OPENAI_API_KEY
 
-    with open("summary.txt", "r") as file:
-        old_summary = file.read()
+    if user == "Yukice":
+        personality = personality_generalYukice
+    else:
+        personality = personality_general2
 
     promt = (
-          [{"role": "system", "content": old_summary},]   
-        + context 
-        + context_terms
-        + personality_general2
+        context_terms
+        + context
+        + personality
         + [{"role": "user", "content": user + ": " + message},]
              )
     response = openai.ChatCompletion.create(
@@ -51,7 +78,7 @@ async def GPT_general(message, user=None, context=None):
         max_tokens=max_tokens,
         n=1,
         stop=None,
-        temperature=0.6,
+        temperature=0.65,
     )
     response_string = response.choices[0].message['content'].strip()
     response_string = response_string.replace("Mei:", "")
@@ -74,7 +101,7 @@ async def GPT_command(message):
         max_tokens=25,
         n=1,
         stop=None,
-        temperature=0.15,
+        temperature=0.3,
     )
     response_string = response.choices[0].message['content'].strip()
     response_string = response_string.replace("Mei:", "")
@@ -116,7 +143,7 @@ async def GPT_prompt(bot_message=None, category=None):
         bot_promt = ''
     promt = (     
         context_terms
-        + personality_general 
+        + personality_general2 
         + [{"role": "user", "content": events_categories[key]}]
     )
     response = openai.ChatCompletion.create(
