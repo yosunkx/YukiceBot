@@ -12,6 +12,7 @@ import modules.tof as tof
 import MessageLog
 import chatGPT
 import signal
+import modules.news as news
 
 load_dotenv()
 DISCORD_API_KEY = os.getenv('DISCORD_BOT_TOKEN')
@@ -19,7 +20,6 @@ DISCORD_API_KEY = os.getenv('DISCORD_BOT_TOKEN')
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix=commands.when_mentioned_or('!', '<@!1097341747459272845>'), intents=intents)
 
-MessageID_log = MessageLog.MessageID()
 message_logs = MessageLog.MessageLogs()
 
 AUTHORIZED_USER_ID = 104055116897722368
@@ -30,18 +30,21 @@ modules.setup_all_modules(bot)
 async def on_ready():
     print('Logged in as {0.user}'.format(bot))
     print('You can invite the bot by using the following url: ' + discord.utils.oauth_url(bot.user.id))
-    check_events.start()
+    CalenderModule.check_events.start(bot)
 
 @bot.event
 async def on_message(message):
-    blacklisted_category_ids = [1053529567647768628]  # Replace with actual category IDs
+    #valid channel ids to store as memory
+    valid_channel_ids = {370007994831863810, 1098848230118260746}
 
-    if message.channel.category_id not in blacklisted_category_ids:
+    if message.channel.id in valid_channel_ids:
         if message.author == bot.user:
-            message_logs.append(message.guild.id, {"role": "assistant", "content": message.content})
+            print("Appending assistant message:", message.content)  # Add this line
+            await message_logs.append(message.guild.id, {"role": "assistant", "content": message.content})
             return
         else:
-            message_logs.append(message.guild.id, {"role": "user", "content": message.author.name + ": " + message.content})
+            print("Appending user message:", message.author.name + ": " + message.content)  # Add this line
+            await message_logs.append(message.guild.id, {"role": "user", "content": message.author.name + ": " + message.content})
 
     ctx = await bot.get_context(message)
 
@@ -95,97 +98,6 @@ async def on_message(message):
     else:
         # If the message starts with a valid command, process it 
         await bot.process_commands(message)
-
-
-
-@bot.command()
-async def add_test_event(ctx):
-    start_time = datetime.datetime.utcnow() + datetime.timedelta(minutes=2)
-    await CalenderModule.add_test_event(start_time)
-    bot_message = f"event added at {start_time.strftime('%Y-%m-%d %H:%M')}"
-    GPT_message = await chatGPT.GPT_prompt(None, "add_test_event")
-    await ctx.send(GPT_message + "\n" + bot_message)
-
-
-@bot.command()
-async def events(ctx, end_date: str = None):
-    if end_date is None:
-        end_time = None
-    else:
-        try:
-            end_date_obj = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
-            end_time = end_date_obj.isoformat() + 'T23:59:59.999999Z'
-        except ValueError:
-            end_time = None
-
-    events = await CalenderModule.get_events(end_time=end_time)
-    if not events:
-        await ctx.send('no upcomming events')
-    else:
-        formatted_strings = []
-        for event in events:
-            formatted_string = f"{event['summary']} on <t:{event['start_timestamp']}:f>"
-            formatted_strings.append(formatted_string)
-
-        output_string = '\n'.join(formatted_strings)
-        GPT_message = await chatGPT.GPT_prompt(None, "events")
-        await ctx.send(GPT_message + "\n" + output_string)
-
-
-@tasks.loop(minutes=1)
-async def check_events():
-    now = datetime.datetime.utcnow()
-    now_plus_2_minutes = now + datetime.timedelta(minutes=2)
-    now_iso = now.isoformat() + 'Z'
-    now_plus_2_minutes_iso = now_plus_2_minutes.isoformat() + 'Z'
-    events = await CalenderModule.get_events(now_iso, now_plus_2_minutes_iso)
-
-    if events:
-        print('event detected')
-        for event in events:
-            start_timestamp = event.get('start_timestamp', '')
-            end_timestamp = event.get('end_timestamp', '')
-            summary = event.get('summary', '')
-            start_ID = event.get('start_ID', '')
-            message = event.get('message', '')
-            role_name = event.get('role_name', '')
-            end_ID = event.get('end_ID', '')
-            if not start_timestamp or not end_timestamp:
-                continue
-            role = discord.utils.get(bot.guilds[0].roles, name=role_name)
-            start_time = datetime.datetime.utcfromtimestamp(int(start_timestamp))
-            end_time = datetime.datetime.utcfromtimestamp(int(end_timestamp))
-            if start_time <= now_plus_2_minutes:
-                if MessageID_log.contains(start_ID) or not message:
-                    continue
-                if role:
-                    formatted_string = f"{role.mention} {message} starts <t:{start_timestamp}:R>"
-                    if role_name == 'bottesting':
-                        channel_name = 'bot-testing'
-                    else:
-                        channel_name = 'general-chat'
-                    channel = discord.utils.get(bot.guilds[0].text_channels, name=channel_name)
-                    GPT_message = await chatGPT.GPT_prompt(formatted_string, "check_events")
-                    await channel.send(GPT_message + "\n" + formatted_string)
-                    MessageID_log.enqueue(start_ID)
-                    if 'tower of fantasy dailies' in summary:
-                        await tof.add_tof_dailies(start_time)
-                    MessageID_log.print()
-
-            if end_time <= now_plus_2_minutes and end_timestamp != start_timestamp:
-                if MessageID_log.contains(end_ID) or not message:
-                    continue
-                if role:
-                    formatted_string = f"{role.mention} {message} ends <t:{end_timestamp}:R>"
-                    if role_name == 'bottesting':
-                        channel_name = 'bot-testing'
-                    else:
-                        channel_name = 'general-chat'
-                    channel = discord.utils.get(bot.guilds[0].text_channels, name=channel_name)
-                    GPT_message = await chatGPT.GPT_prompt(formatted_string, "check_events")
-                    await channel.send(GPT_message + "\n" + formatted_string)
-                    MessageID_log.enqueue(end_ID)
-                    MessageID_log.print()
 
 
 async def none_command(message, ctx, logs):

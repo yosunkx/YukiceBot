@@ -9,10 +9,11 @@ from googleapiclient.errors import HttpError
 from googleapiclient.discovery import build
 from discord.ext import commands
 from discord.ext import tasks
+import discord
 import chatGPT
+from datetime import datetime as dt
 import datetime
 import MessageLog
-import discord
 from . import tof
 
 SERVICE_ACCOUNT_FILE = 'C:/Users/Kevin/Documents/YukiceBot/meibot-384017-177d6e3bc3bb.json'
@@ -24,6 +25,8 @@ credentials = service_account.Credentials.from_service_account_file(
         SERVICE_ACCOUNT_FILE, scopes=SCOPES)
 
 MessageID_log = MessageLog.MessageID()
+
+load_dotenv('.env')
 
 
 @commands.command()
@@ -63,13 +66,18 @@ async def events(ctx, end_date: str = None):
 async def check_events(bot):
     now = datetime.datetime.utcnow()
     now_plus_2_minutes = now + datetime.timedelta(minutes=2)
+    now_plus_30_minutes = now + datetime.timedelta(minutes = 30)
     now_iso = now.isoformat() + 'Z'
     now_plus_2_minutes_iso = now_plus_2_minutes.isoformat() + 'Z'
     events = await get_events(now_iso, now_plus_2_minutes_iso)
 
     if events:
-        print('event detected')
+        #print('event detected')
+        channel_message = ''
+        role_names = []
+        message_header = ''
         for event in events:
+            #print('event')
             start_timestamp = event.get('start_timestamp', '')
             end_timestamp = event.get('end_timestamp', '')
             summary = event.get('summary', '')
@@ -77,42 +85,52 @@ async def check_events(bot):
             message = event.get('message', '')
             role_name = event.get('role_name', '')
             end_ID = event.get('end_ID', '')
+            if 'dail' in summary:
+                check_time = now_plus_2_minutes
+            else:
+                check_time = now_plus_30_minutes
+            role = discord.utils.get(bot.guilds[0].roles, name=role_name)
             if not start_timestamp or not end_timestamp:
                 continue
-            role = discord.utils.get(bot.guilds[0].roles, name=role_name)
             start_time = datetime.datetime.utcfromtimestamp(int(start_timestamp))
             end_time = datetime.datetime.utcfromtimestamp(int(end_timestamp))
-            if start_time <= now_plus_2_minutes:
+
+
+            if start_time <= check_time and start_time > now:
                 if MessageID_log.contains(start_ID) or not message:
                     continue
                 if role:
-                    formatted_string = f"{role.mention} {message} starts <t:{start_timestamp}:R>"
-                    if role_name == 'bottesting':
-                        channel_name = 'bot-testing'
-                    else:
-                        channel_name = 'general-chat'
-                    channel = discord.utils.get(bot.guilds[0].text_channels, name=channel_name)
-                    GPT_message = await chatGPT.GPT_prompt(formatted_string, "check_events")
-                    await channel.send(GPT_message + "\n" + formatted_string)
+                    channel_message += f"{message} starts <t:{start_timestamp}:R>"
+                    channel_message += "\n"
+                    if role_name not in role_names:
+                        message_header += f"{role.mention} "
+                        role_names.append(role)
                     MessageID_log.enqueue(start_ID)
                     if 'tower of fantasy dailies' in summary:
                         await tof.add_tof_dailies(start_time)
                     MessageID_log.print()
 
-            if end_time <= now_plus_2_minutes and end_timestamp != start_timestamp:
+            if end_time <= check_time and end_timestamp != start_timestamp and end_time > now:
                 if MessageID_log.contains(end_ID) or not message:
                     continue
                 if role:
-                    formatted_string = f"{role.mention} {message} ends <t:{end_timestamp}:R>"
-                    if role_name == 'bottesting':
-                        channel_name = 'bot-testing'
-                    else:
-                        channel_name = 'general-chat'
-                    channel = discord.utils.get(bot.guilds[0].text_channels, name=channel_name)
-                    GPT_message = await chatGPT.GPT_prompt(formatted_string, "check_events")
-                    await channel.send(GPT_message + "\n" + formatted_string)
+                    channel_message += f"{message} ends <t:{start_timestamp}:R>"
+                    channel_message += "\n"
+                    if role_name not in role_names:
+                        message_header += f"{role.mention} "
+                        role_names.append(role)
                     MessageID_log.enqueue(end_ID)
                     MessageID_log.print()
+
+        if channel_message:
+            if role_name == 'bottesting':
+                channel_name = 'bot-testing'
+            else:
+                channel_name = 'general-chat'
+            channel = discord.utils.get(bot.guilds[0].text_channels, name=channel_name)
+            GPT_message = await chatGPT.GPT_prompt(channel_message, "check_events")
+            print('sending event')
+            await channel.send(message_header + "\n" + GPT_message + "\n" + channel_message)
 
 
 def setup(bot):
@@ -123,6 +141,19 @@ def setup(bot):
 async def add_event(start_time, end_time=None, summary=None, description=None, role=None):
     if end_time is None:
         end_time = start_time
+
+    if isinstance(start_time, str):
+        try:
+            start_time = dt.strptime(start_time, "%Y-%m-%dT%H:%M:%S")
+        except ValueError:
+            print('Invalid start_time format. Please provide a valid datetime object or an ISO formatted string.')
+            return None
+
+    if isinstance(end_time, str):
+        try:
+            end_time = dt.strptime(end_time, "%Y-%m-%dT%H:%M:%S")
+        except ValueError:
+            end_time = start_time
 
     random_id1 = MessageLog.generate_random_ID()
     random_id2 = MessageLog.generate_random_ID()

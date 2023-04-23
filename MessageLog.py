@@ -56,22 +56,22 @@ class MessageLogs:
     def _token_count(self, messages):
         return sum(len(message["content"].split()) for message in messages)
 
-    def _truncate_and_summarize(self, key):
+    async def _truncate_and_summarize(self, key):
         half_length = self.token_limit // 2
         messages_to_summarize = []
         while self._token_count(self._data[key]['deque']) > half_length:
             messages_to_summarize.append(self._data[key]['deque'].popleft())
 
-        summary = chatGPT.GPT_log_summary(messages_to_summarize)
+        summary = await chatGPT.GPT_log_summary(messages_to_summarize)
         self._data[key]['deque'].appendleft({'role': 'summary', 'content': summary})
         self.save_logs()
 
-    def append(self, key, message):
+    async def append(self, key, message):
         if key not in self._data:
             self._data[key] = {'deque': deque()}
 
         if (self._token_count(self._data[key]['deque']) + len(message["content"].split())) > self.token_limit:
-            self._truncate_and_summarize(key)
+            await self._truncate_and_summarize(key)
 
         self._data[key]['deque'].append(message)
 

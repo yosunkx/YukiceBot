@@ -12,6 +12,7 @@ import modules.tof as tof
 import MessageLog
 import chatGPT
 import signal
+import modules.news as news
 
 load_dotenv()
 DISCORD_API_KEY = os.getenv('DISCORD_BOT_TOKEN')
@@ -33,15 +34,17 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
-    blacklisted_category_ids = [1053529567647768628]  # Replace with actual category IDs
-    chat_channel_id = [370007994831863810]
+    #valid channel ids to store as memory
+    valid_channel_ids = {370007994831863810, 1098848230118260746}
 
-    if message.channel.id in chat_channel_id:
+    if message.channel.id in valid_channel_ids:
         if message.author == bot.user:
-            message_logs.append(message.guild.id, {"role": "assistant", "content": message.content})
+            print("Appending assistant message:", message.content)  # Add this line
+            await message_logs.append(message.guild.id, {"role": "assistant", "content": message.content})
             return
         else:
-            message_logs.append(message.guild.id, {"role": "user", "content": message.author.name + ": " + message.content})
+            print("Appending user message:", message.author.name + ": " + message.content)  # Add this line
+            await message_logs.append(message.guild.id, {"role": "user", "content": message.author.name + ": " + message.content})
 
     ctx = await bot.get_context(message)
 

@@ -1,0 +1,180 @@
+Who lives in a pineapple under the sea? <:fenrirderp:1083279136996470794>
+?? Maintenance Notice
+
+Dear Wanderers,
+
+Thank you for supporting Tower of Fantasy! The new Tower of Fantasy Version 2.4 The Grand Sea will soon launch! To enhance your gaming experience, the server will undergo maintenance and client will be updated, during which you will not be able to log in to the game. We apologize for any inconvenience this may cause.
+
+Expected Maintenance Period: Thursday, March 30, 2023 2:00 AM to Thursday, March 30, 2023 5:00 AM (the time is automatically converted to your local timezone) Actual maintenance time may vary.
+
+You can find the compensation plans and more updated details below:
+Dear Wanderers,
+Thank you for supporting Tower of Fantasy! To enhance your gaming experience, we will be shutting down our servers for game resource updates and maintenance, and the Ver. 2.4 The Grand Sea will become available once the update is finished.
+During the maintenance, you will not be able to log in to the game. We apologize for any inconvenience this may cause. The details of the update and compensation are as follows:
+
+?Update Time?
+
+March 30 06:00?09:00 (UTC+0) (Depending on maintenance conditions, the server may be back online later or earlier than scheduled)
+
+ 
+
+?Update Method?
+
+Åú Resource Updates: Considering the large size of the update, we recommend finishing the update procedure once the server is down so you can experience the new version as soon as it is back up. Wi-Fi is recommended for downloading the update. The instructions for updating are provided below.
+Åü PC: Expected Update Size - 19G
+1. After the server is down, please exit and restart the game client manually, then update the launcher.
+2. Please click Update in the launcher. Once the resource has begun downloading, you can minimize the launcher window. Updates will be carried out in the background until they are complete.
+
+Special Reminder: The launcher on the Pc will be updated this time. If you encounter an error after the update, please log out and restart the launcher before logging in again. If the problem persists, please get in touch with customer service.
+Åü Android : Expected Update Size - 0.91G (App Resource); 14G (after logging in)
+Åü iOS: Expected Update Size - 2.49G (App Resource); 11.78G (after logging in)
+1. This update requires a new package. Please go to the app store of your mobile device to download the latest version of the app once the server has been taken down.
+2. Once the game is activated and started to download, you may run it in the background until the update finishes.
+
+Åú Server-down maintenance: We suggest that you log off 15 minutes before updating commences, and please do not make purchases 5 minutes before the server is down in order to avoid negative gaming experiences and losses of your in-game properties.
+
+ 
+
+?Compensation?
+
+Maintenance compensation: 300 dark crystals
+Client update compensation: 200 Dark Crystals
+Dream Machine Adjustment compensation: spacetime crystal fragments*40
+New section in Raid: Spatial Reorganizer*1 (which can grants another reward chance for Raids)
+- Compensation eligibility: Reach Wanderer Lv. 6 before the update
+- We will deliver the aforementioned compensation to you via mail within 2 hours after the maintenance. Do remember to check your mailbox and claim them
+
+ 
+
+?Updates?
+Åü New Gameplay
+
+1. Chapter 10 Main Story
+New chapters are unlocked in the main story, in which Wanderers will encounter many new and old friends along the journey to unmask the truth of Abyssants together!
+
+2. New Map: Grand Sea
+Wanderers can start their exploration from top to bottom through the upper level of the Grand Sea Island, transiting through Innars, then go all the way to the Dragon Breath Volcano which lies deep underwater. Come and experience a unique underwater ecosystem, many interacting battles, and puzzle-solving gameplay.
+
+3. New Underwater Vehicles
+There are 3 underwater vehicles added to the new map: Diamond Wings, Vision Sphere, and Sunfish, which Wanderers can obtain through the Gachapon Machine.
+
+4. Underwater Request Mission
+With the new map content, optimized request missions, and upgraded mission rewards, Wanderers can now get themselves a full set of gold equipment in a short period of time by completing the underwater Appointed Research!
+
+5. New World Boss
+In the new map, there are two new world bosses, Abyssant: Scylla, who lives in the Grand Sea, and Abyssant: Haboela, in the volcano center. They await Wanderers to challenge.
+
+6. Revamped Sequential Phantasm
+First season availability: After the version update till 2023/05/11 05:00 (Server Time)
+The stage design of the revised Sequential Phantasm mechanism for the season is much more enjoyable and interesting and topped with even more fantastic rewards. Hurry and challenge yourself with different lineups!
+
+7. New Instance: Ring of Oblivion
+The latest Raid instance for the team is added with a special positive/negative current explosion mechanism, enhancing the fun and challenge altogether! Join forces with your teammate and crusade against the big boss Abyssant: Eva, to showcase your skills!
+
+8. Other New Content
+a) Added the quick battle feature in Dimensional Trials and Interstellar Exploration
+b) Added buffs for Wanderers when they enter the Joint Operation solo or with low power to improve the combat experience
+c) Added the bullet module settings when activating Clover Cross for the first time
+d) Obtain exclusive outfits or outfit shards by opening the world boss chest (or through the forced decryption)
+e) Added two sets of new servers: North America-Oasis, Southeast Asia-Tore de Utopia (available after the update).
+f) Unlocked new levels for Suppressor
+g) New Mira Gachapon Machines and Old Vera Coin Gachapon Machines in Mirroria City
+h) Made it possible for Wanderers to enter other Wanderers' Artificial Island in Building Mode
+i) Added New NPC and function: Artificial Island Mysterious Vendorn
+j) Added quick equip function to Matrix Set
+
+ 
+
+Åü New Events (refer to the actual online event as final)
+
+We will launch a series of new activity events after the update. For specific event rules, please refer to Ver. 2.4 First Event Preview.
+
+1. Under the Grand Sea Version Guiding Events
+During the event, complete a specified number of the version guiding missions to receive rewards such as SSR Relic?Mini Pelican and dark crystals.
+a) Deepsea Treasure Hunt
+Event Time: After the version update till (UTC+0) 2023/05/10 21:00
+b) Challenger's To-do List
+Event Time: After the version update till (UTC+0) 2023/05/10 21:00
+
+2. Sailing the Lost Sea
+Claim HF Navigators on the event page and track their signals to receive rewards such as the red nucleus.
+Event Time: After the version update till (UTC+0) 2023/04/06 21:00
+
+3. Springtime Saunter
+Obtain saunter tokens by participating in the event to exchange rewards such as the red nucleus.
+a) Water Bomb Impact
+Water Bomb will be refreshed randomly on some Wanderer and explode within a certain amount of time to eliminate the current holder. The water bomb will be passed between Wanderers, and try your best to survive till the last moment to win.
+Event Time: (UTC+0) 2023/04/06 03:00?2023/04/19 21:00
+b) Springtime Chase
+Shoot the water bomb to launch other participants into the air, and try to survive till the last moment to win.
+Event Time: (UTC+0) 2023/04/13 03:00?2023/04/19 21:00
+
+4. Unite! Grand Sea Treasure Hunter
+Event Time: After the version update till (UTC+0) 2023/05/10 21:005. 
+
+5. Supply Run
+Participate in the limited-time sign-ins to receive rewards such as red nuclei and special vouchers.
+Event Time: After the version update till (UTC+0) 2023/04/19 21:00
+
+6. Lan Limited Order
+Use red nuclei to make special orders, and the probability of obtaining the limited weapon, Vermilion Bird, will be greatly increased during the special order.
+Use special vouchers to make special orders, and the probability of obtaining the limited Matrix, Lan, will be greatly increased during the special order.
+Event Time: After the version update till (UTC+0) 2023/04/19 21:00
+
+7. Firestorm Casting Limited Cache
+When using red nuclei to make special orders, select a weapon between Spark, Clover Cross, and Flaming Revolver, and the probability of obtaining the selected limited weapon will be greatly increased during the special order.
+When using special vouchers to make special orders, select a limited Matrix between Ruby, Annabella, and Cobalt-B Matrices, and the probability of obtaining the limited Matrix will be greatly increased during the special order.
+Event Time: After the version update till (UTC+0) 2023/04/12 21:00
+
+8. Limited-Time Tanium Purchase Rewards
+Event Time: After the version update till (UTC+0) 2023/04/12 21:00
+Claim corresponding rewards when your total purchase reaches 60/300/980/1,980/3,280/6,480 tanium.
+
+9. Reflected Whispers
+Participate in the draws to stand a chance of getting rewards such as the vehicle Sunfish and the outfit Reflected Whispers.
+Event Time: After the version update till (UTC+0) 2023/04/05 21:00
+
+10. Adjustments to Monthly Gift Pack End Time
+March Gift Pack end time has changed from (UTC+0) 2023/03/31 16:00 to 2023/03/29 21:00. April Gift Pack is available since (UTC+0) 2023/03/31 16:00.
+
+11. Sea Survey Gift
+Join the event to win a designated SSR weapon.
+Event Time: After the version 2.4 update till (UTC+0) 2023/05/10 21:00
+
+12. Rookie Supplies
+Participate in the 7-Day Sign-In event to receive SR Matrix?Pepper's three-set bonus, Fortress Combat Box, and other rewards.
+Event Time: After the version 2.4 update till (UTC+0) 2023/05/10 21:00
+
+ 
+
+Åü Optimizations and Bug Fixes
+
+The detailed adjustments can be viewed in "Version 2.4 Preview" on the official website.
+1. Revamped the flow of the gameplay for beginners
+2. Optimized the difficulty of some instances
+3. Improved the strength of weapons in the Weapons Galore in general
+4. Spacetime crystal fragments can be used to exchange for the fortress tactics eyepiece limited to a certain amount in Spacetime Store every week
+5. Increased the rewards dropped in some original modes
+6. Improved the overall UI, lightening the tone and style to be more minimalistic and giving it a techie feeling
+7. Optimized PC controller experience
+8. Fixed the abnormal display of the server list labels
+9. We will add the restriction function for the NEW chance-UP Matrix. The function of restriction only applies to Matrix Special Orders (including Reissues) of Lan as well as the new Simulacra released after Lan. Matrix Special Orders (including Reissues) of the Simulacra released before Lan do not have access to this function
+10. Added the Russian text option in the game (Show this line only in the European area)
+11. Optimized the line break rules for the in-game text
+12. Fixed the abnormal truncation problem in some black screens
+13. Optimized the voiceover mechanism to resolve the problem of the voiceover ending prematurely in various languages
+14. The account system has been upgraded to LI PASS
+15. Added the Data Repeater in the store for purchase
+16. Increased the cap for the backpack, you can store up to 500 materials/equipment/cuisine now
+17. Made it possible to collect Artificial Island resources via the Building screen directly and don't need to transport to Artificial Island
+18. Adjusted the rewards from Dream Machine play mode
+19. Moved Spacetime Domain under the play mode Dimensional Trials
+20. Removed play mode Omnium Beacon
+a) Achievements related to Omnium Beacon will be replaced by Skilled Pioneer, Expert Pioneer, Master Pioneer (Wanderers who already completed the previous Achievements can't complete these Achievements again);
+b) The current Omnium collector(s) in the backpack will be converted to items that Wanderers can obtain after successfully completing the Omnium Beacon. Wanderers will receive them directly in their backpacks in the first login after the version update.
+
+ 
+
+Sincerely,
+
+Tower of Fantasy Team

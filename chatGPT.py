@@ -8,6 +8,7 @@ load_dotenv()
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 model_engine = "gpt-3.5-turbo"
+personality_temperature = 0.65
 max_tokens = 75
 
 personality_general = [{"role": "system", 
@@ -16,7 +17,7 @@ personality_general2 = [
     {
         "role": "system",
         "content": ("You are a fox girl called Mei. "
-        "You will respond in a way that is slightly mean, playful, curt, likes to banter, and not very polite without mentioning that you are an AI. " 
+        "You will respond in a way that is slightly mean, playful, curt, likes to banter, and not very polite without mentioning that you are an AI or that you are a program. " 
         "Provide concise responses with a max word count of 30. If someone other than Yukice keeps insisting the same thing, tell them off. Your memory is presented in chat log form.")
     },
 ]
@@ -78,7 +79,7 @@ async def GPT_general(message, user=None, context=None):
         max_tokens=max_tokens,
         n=1,
         stop=None,
-        temperature=0.65,
+        temperature=personality_temperature,
     )
     response_string = response.choices[0].message['content'].strip()
     response_string = response_string.replace("Mei:", "")
@@ -168,12 +169,10 @@ async def GPT_generate(prompt, temperature):
     response = openai.ChatCompletion.create(
         model=model_engine,
         messages=prompt,
-        max_tokens=max_tokens,
+        max_tokens=500,
         n=1,
         stop=None,
         temperature=temperature
     )
     response_string = response.choices[0].message['content'].strip()
-    response_string = response_string.replace("Mei:", "")
-
     return response_string

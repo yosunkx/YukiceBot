@@ -27,6 +27,7 @@
     <Compile Include="MessageLog.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="modules\news.py" />
     <Compile Include="modules\tof.py" />
     <Compile Include="MeiBotMain.py" />
     <Compile Include="modules\__init__.py" />
@@ -34,6 +35,7 @@
   <ItemGroup>
     <Content Include=".env" />
     <Content Include="botsettings.txt" />
+    <Content Include="modules\test_text.txt" />
     <Content Include="summary.txt" />
     <Content Include="todo.txt" />
   </ItemGroup>
