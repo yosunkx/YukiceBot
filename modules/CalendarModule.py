@@ -15,6 +15,8 @@ from datetime import datetime as dt
 import datetime
 import MessageLog
 from . import tof
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 SERVICE_ACCOUNT_FILE = 'C:/Users/Kevin/Documents/YukiceBot/meibot-384017-177d6e3bc3bb.json'
 SCOPES = ['https://www.googleapis.com/auth/calendar']
@@ -66,10 +68,10 @@ async def events(ctx, end_date: str = None):
 async def check_events(bot):
     now = datetime.datetime.utcnow()
     now_plus_2_minutes = now + datetime.timedelta(minutes=2)
-    now_plus_30_minutes = now + datetime.timedelta(minutes = 30)
+    now_plus_30_minutes = now + datetime.timedelta(minutes=30)
     now_iso = now.isoformat() + 'Z'
     now_plus_2_minutes_iso = now_plus_2_minutes.isoformat() + 'Z'
-    events = await get_events(now_iso, now_plus_2_minutes_iso)
+    events = await get_events(now_iso, now_plus_30_minutes)
 
     if events:
         #print('event detected')
@@ -104,7 +106,7 @@ async def check_events(bot):
                     channel_message += "\n"
                     if role_name not in role_names:
                         message_header += f"{role.mention} "
-                        role_names.append(role)
+                        role_names.append(role_name)
                     MessageID_log.enqueue(start_ID)
                     if 'tower of fantasy dailies' in summary:
                         await tof.add_tof_dailies(start_time)
@@ -114,11 +116,11 @@ async def check_events(bot):
                 if MessageID_log.contains(end_ID) or not message:
                     continue
                 if role:
-                    channel_message += f"{message} ends <t:{start_timestamp}:R>"
+                    channel_message += f"{message} ends <t:{end_timestamp}:R>"
                     channel_message += "\n"
                     if role_name not in role_names:
                         message_header += f"{role.mention} "
-                        role_names.append(role)
+                        role_names.append(role_name)
                     MessageID_log.enqueue(end_ID)
                     MessageID_log.print()
 
@@ -131,11 +133,6 @@ async def check_events(bot):
             GPT_message = await chatGPT.GPT_prompt(channel_message, "check_events")
             print('sending event')
             await channel.send(message_header + "\n" + GPT_message + "\n" + channel_message)
-
-
-def setup(bot):
-    bot.add_command(add_test_event)
-    bot.add_command(events)
 
 
 async def add_event(start_time, end_time=None, summary=None, description=None, role=None):
@@ -176,6 +173,27 @@ async def add_event(start_time, end_time=None, summary=None, description=None, r
     try:
         service = build('calendar', 'v3', credentials=credentials)
         print("CALENDAR_ID:", CALENDAR_ID)
+        #check if similar event already exists
+        check_start_time = start_time - datetime.timedelta(hours=12)
+        check_end_time = end_time + datetime.timedelta(hours=12)
+        existing_events = await get_events(check_start_time, check_end_time)
+        if existing_events:
+            for existing_event in existing_events:
+                start_timestamp = existing_event.get('start_timestamp', '')
+                end_timestamp = existing_event.get('end_timestamp', '')
+                check_event_summary = existing_event.get('summary', '')
+                role_name = existing_event.get('role_name', '')
+                if not start_timestamp or not end_timestamp:
+                    continue
+                if role != role_name:
+                    continue
+                event_start_time = datetime.datetime.utcfromtimestamp(int(start_timestamp))
+                if start_time != event_start_time:
+                    continue
+                if await check_similar(summary, check_event_summary):
+                    return
+
+        #add event
         event = service.events().insert(calendarId=CALENDAR_ID, body=event).execute()
         print(f'Event created: {event.get("htmlLink")}')
     except HttpError as error:
@@ -191,10 +209,14 @@ async def get_events(start_time=None, end_time=None):
     loop = asyncio.get_event_loop()
 
     if start_time is None:
-        start_time = datetime.datetime.utcnow().date().isoformat() + 'T00:00:00Z'  # 'Z' indicates UTC time
+        start_time = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + 'Z'
+    elif isinstance(start_time, datetime.datetime):
+        start_time = start_time.replace(microsecond=0).isoformat() + 'Z'
 
     if end_time is None:
-        end_time = (datetime.datetime.utcnow() + datetime.timedelta(days=1)).date().isoformat() + 'T23:59:59.999999Z'
+        end_time = (datetime.datetime.utcnow() + datetime.timedelta(days=1)).replace(microsecond=0).isoformat() + 'Z'
+    elif isinstance(end_time, datetime.datetime):
+        end_time = end_time.replace(microsecond=0).isoformat() + 'Z'
 
     try:
         # Wrap the synchronous call to 'build' in 'run_in_executor'
@@ -228,3 +250,32 @@ async def get_events(start_time=None, end_time=None):
         print(f'An error occurred: {error}')
         events = None
         return events
+
+
+async def check_similar(new_event_summary, old_event_summary):
+    similarity_threshold=0.4
+
+    summaries = [new_event_summary] + [old_event_summary]
+
+    # Vectorize the summaries using TF-IDF
+    vectorizer = TfidfVectorizer()
+    tfidf_matrix = vectorizer.fit_transform(summaries)
+
+    # Calculate cosine similarity between the new event summary and all other summaries
+    cosine_similarities = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix)
+
+    # Check if the cosine similarity is above the specified threshold
+    if cosine_similarities[0][1] >= similarity_threshold:
+        return True
+
+    return False
+
+
+
+
+
+
+
+def setup(bot):
+    bot.add_command(add_test_event)
+    bot.add_command(events)

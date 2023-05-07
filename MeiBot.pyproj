@@ -36,7 +36,6 @@
     <Content Include=".env" />
     <Content Include="botsettings.txt" />
     <Content Include="modules\test_text.txt" />
-    <Content Include="summary.txt" />
     <Content Include="todo.txt" />
   </ItemGroup>
   <ItemGroup>

@@ -152,14 +152,14 @@ async def news_text_to_summary(raw_text):
         + [{"role": "user", 
             "content": raw_text},]
     )    
-    summary_text = await chatGPT.GPT_generate(prompt, 0.3)
+    summary_text = await chatGPT.GPT_general(prompt, 0.3)
     return summary_text
 
 async def news_summary_to_calendar(summary, tag):
     prompt = (     
         [{"role": "user", 
           "content": ("For each maintenance and event listed, convert the given information into the format: "
-"start_time, end_time, title. Use none for events that do not have a specific start time provided. Format start_time and end_time using Python's datetime.isoformat(). Please make sure to use the correct start date for each event, especially if it is not provided."
+"start_time, end_time, title. Use none for events that do not have a specific start time provided. Format start_time and end_time using Python's datetime.isoformat(). Please make sure to use the correct start date for each event, especially if it is not provided. Use 2023 for year if no year is provided."
 "Example output:"
 "2023-04-22T22:00:00,2023-04-23T22:00:00,Maintenance"
 "none,2023-04-25T06:00:00,Heaven's Gate"
@@ -168,7 +168,7 @@ async def news_summary_to_calendar(summary, tag):
             "content": summary},]
     )
     logging.info("Before GPT_generate() call")
-    calendar_text = await chatGPT.GPT_generate(prompt, 0.3)
+    calendar_text = await chatGPT.GPT_general(prompt, 0.3)
     logging.info("After GPT_generate() call")
     #print("finished summary")
     #print(calendar_text)

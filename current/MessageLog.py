@@ -4,6 +4,8 @@ import string
 import chatGPT
 import os
 import json
+import asyncio
+
 
 def generate_random_ID():
     return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(6))
@@ -52,6 +54,7 @@ class MessageLogs:
         self._data = {}
         self.token_limit = token_limit
         self.load_logs()
+        self.lock = asyncio.Lock()
 
     def _token_count(self, messages):
         return sum(len(message["content"].split()) for message in messages)
@@ -63,7 +66,7 @@ class MessageLogs:
             messages_to_summarize.append(self._data[key]['deque'].popleft())
 
         summary = await chatGPT.GPT_log_summary(messages_to_summarize)
-        self._data[key]['deque'].appendleft({'role': 'summary', 'content': summary})
+        self._data[key]['deque'].appendleft({'role': 'system', 'content': summary})
         self.save_logs()
 
     async def append(self, key, message):
@@ -78,6 +81,7 @@ class MessageLogs:
     def get_messages(self, key):
         if key not in self._data:
             self._data[key] = {'deque': deque()}
+
         return self._data[key]
 
     def __repr__(self):
@@ -93,16 +97,19 @@ class MessageLogs:
             os.mkdir('memory')
 
         for key, data in self._data.items():
-            with open(f'memory/{key}.txt', 'w', encoding='utf-8') as f:
+            with open(f'memory/{str(key)}.json', 'w', encoding='utf-8') as f:
                 json.dump(list(data['deque']), f)
+
 
     def load_logs(self):
         if not os.path.exists('memory'):
             return
 
         for filename in os.listdir('memory'):
-            if filename.endswith('.txt'):
-                key = filename[:-4]
+            if filename.endswith('.json'):
+                key = int(filename[:-5])
                 with open(f'memory/{filename}', 'r', encoding='utf-8') as f:
                     data = json.load(f)
                     self._data[key] = {'deque': deque(data)}
+                    print(f"loaded memory: {key}")
+

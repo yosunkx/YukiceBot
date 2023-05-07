@@ -21,7 +21,7 @@ def setup(bot):
 
 async def add_tof_daily():
     description = 'check old man otherwise JJ'
-    now = datetime.datetime.utcnow() + datetime.timedelta(hour = 1)
+    now = datetime.datetime.utcnow() + datetime.timedelta(hours=1)
     start_time = now.replace(hour=3, minute=30, second=0, microsecond=0)
     if now >= start_time:
         start_time += datetime.timedelta(days=1)

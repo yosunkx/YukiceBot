@@ -13,6 +13,8 @@ import MessageLog
 import chatGPT
 import signal
 import modules.news as news
+import re
+
 
 load_dotenv()
 DISCORD_API_KEY = os.getenv('DISCORD_BOT_TOKEN')
@@ -33,36 +35,40 @@ async def on_ready():
     CalenderModule.check_events.start(bot)
 
 @bot.event
-async def on_message(message):
+async def on_message(message_obj):
     #valid channel ids to store as memory
-    valid_channel_ids = {370007994831863810, 1098848230118260746}
+    valid_channel_ids = {370007994831863810, 1102494872356786227, 1097616064407408651}
+    processed_content = await process_message_content(message_obj)
 
-    if message.channel.id in valid_channel_ids:
-        if message.author == bot.user:
-            print("Appending assistant message:", message.content)  # Add this line
-            await message_logs.append(message.guild.id, {"role": "assistant", "content": message.content})
-            return
-        else:
-            print("Appending user message:", message.author.name + ": " + message.content)  # Add this line
-            await message_logs.append(message.guild.id, {"role": "user", "content": message.author.name + ": " + message.content})
+    if message_obj.channel.id in valid_channel_ids:
+        async with message_logs.lock:
+            if message_obj.author == bot.user:               
+                print("Appending assistant message:", "Mei: " + processed_content)
+                await message_logs.append(message_obj.guild.id, {"role": "assistant", "content": "Mei: " + processed_content})
+                return
+            else:
+                print("Appending user message:", message_obj.author.name + ": " + processed_content)
+                await message_logs.append(message_obj.guild.id, {"role": "user", "content": message_obj.author.name + ": " + processed_content})
+    else:
+        return
 
-    ctx = await bot.get_context(message)
+    ctx = await bot.get_context(message_obj)
 
     # Check if the message is a reply to a bot message
-    if message.reference:
-        referenced_message = await message.channel.fetch_message(message.reference.message_id)
+    if message_obj.reference:
+        referenced_message = await message_obj.channel.fetch_message(message_obj.reference.message_id)
         if referenced_message.author == bot.user:
             # Split the message content into words
-            words = message.content.split()
+            words = message_obj.content.split()
 
             # Check if the reply content starts with a valid command
             command_name = words[0]
             if command_name in bot.all_commands:
                 # Set the message content to include the command arguments (excluding the command name)
-                message.content = " ".join(words[1:]) if len(words) > 1 else ""
+                message_obj.content = " ".join(words[1:]) if len(words) > 1 else ""
 
                 # Create a new context and set the command prefix as the reply 
-                ctx = await bot.get_context(message)
+                ctx = await bot.get_context(message_obj)
                 ctx.prefix = ""
                 ctx.command = bot.all_commands[command_name]
 
@@ -70,38 +76,40 @@ async def on_message(message):
                 await bot.invoke(ctx)
                 return
             else:
-                await none_command(message, ctx, list(message_logs.get_messages(ctx.guild.id)['deque']))
+                await none_command(message_obj, processed_content, list(message_logs.get_messages(ctx.guild.id)['deque'])[:-1])
 
     # Process other messages
     if ctx.command is None:
         # Check if the message starts with any command prefix
-        prefixes = bot.command_prefix(bot, message)
+        prefixes = bot.command_prefix(bot, message_obj)
         if isinstance(prefixes, str):
             prefixes = [prefixes]
-        if any(message.content.startswith(prefix) for prefix in prefixes):
+        if any(message_obj.content.startswith(prefix) for prefix in prefixes):
             # If the message starts with a mention of the bot
             mention_prefix = f"<@{bot.user.id}>"
-            user_message = message.content
+            user_message = message_obj.content
             if user_message.startswith(mention_prefix):
                 user_message = user_message[len(mention_prefix):].strip()
             if user_message:
-                await none_command(message, ctx, list(message_logs.get_messages(ctx.guild.id)['deque']))
+                await none_command(message_obj, processed_content, list(message_logs.get_messages(ctx.guild.id)['deque'])[:-1])
             return
         else:
             # If the message starts with a mention of the bot
             mention_prefix = f"<@!{bot.user.id}>"
-            if message.content.startswith(mention_prefix):
-                stripped_message = message.content[len(mention_prefix):].strip()
+            if message_obj.content.startswith(mention_prefix):
+                stripped_message = message_obj.content[len(mention_prefix):].strip()
                 if stripped_message:
-                    await none_command(message, ctx, list(message_logs.get_messages(ctx.guild.id)['deque']))
+                    await none_command(message_obj, processed_content, list(message_logs.get_messages(ctx.guild.id)['deque'])[:-1])
                     return
     else:
         # If the message starts with a valid command, process it 
-        await bot.process_commands(message)
+        await bot.process_commands(message_obj)
 
 
-async def none_command(message, ctx, logs):
-    generated_message = await chatGPT.GPT_command(message.content)
+async def none_command(message_obj, message_text, logs):
+    generated_message = await chatGPT.GPT_command(message_obj.content)
+    GPT_message = message_obj.author.name + ": " + message_text
+    #print("Logs before passing to GPT_general: ", logs)
 
     if generated_message.strip().startswith("!"):
         #print("gpt output starts with !")
@@ -113,16 +121,16 @@ async def none_command(message, ctx, logs):
         # Check if the command exists and invoke it
         if command in bot.all_commands:
             cmd_obj = bot.get_command(command)
-            ctx = await bot.get_context(message)
+            ctx = await bot.get_context(message_obj)
             #print("invoking command")
             await ctx.invoke(cmd_obj, *args)
         else:
             #print("not valid command, output as normal message")
-            generated_none_command = await chatGPT.GPT_general(message.content, message.author.name, list(logs))
+            generated_none_command = await chatGPT.GPT_mei(GPT_message, logs)
             await ctx.send(generated_none_command)
     else:
         #print("normal message")
-        generated_none_command = await chatGPT.GPT_general(message.content, message.author.name, list(logs))
+        generated_none_command = await chatGPT.GPT_mei(GPT_message, logs)
         await ctx.send(generated_none_command)
 
 
@@ -137,6 +145,63 @@ async def print_log(ctx):
     print("Message logs for server:", guild_id)
     for message in logs:
         print(f"{message['role']}: {message['content']}")
+
+
+@bot.command(name="print_full_log")
+async def print_full_log(ctx):
+    # Iterate through all the keys and their associated message logs
+    for key, data in message_logs._data.items():
+        logs = data['deque']
+        
+        # Print the message logs for the current key
+        print(f"Message logs for key: {key}")
+        for message in logs:
+            print(f"{message['role']}: {message['content']}")
+        print()  # Add an empty line to separate logs from different keys
+
+
+async def process_message_content(message_obj):
+    guild_obj = message_obj.guild
+    message_text = message_obj.content
+
+    def repl_user_id(match):
+        user_id = int(match.group(1))
+        member = guild_obj.get_member(user_id)
+        if member is not None:
+            if member.nick is not None:
+                return f"@{member.nick}"
+            else:
+                return f"@{member.display_name}"
+        else:
+            return f"@{match.group(0)}"
+
+    def repl_role_id(match):
+        role_id = int(match.group(1))
+        role = discord.utils.get(guild_obj.roles, id=role_id)
+        return f"@{role.name}" if role is not None else f"@{match.group(0)}"
+
+    def repl_channel_id_link(match):
+        channel_id = int(match.group(1))
+        channel = guild_obj.get_channel(channel_id)
+        if channel is not None:
+            return f"#{channel.name}"
+        else:
+            return f"#{match.group(0)}"
+
+    def repl_channel_id_wrap(match):
+        channel_id = int(match.group(1))
+        channel = guild_obj.get_channel(channel_id)
+        return f"#{channel.name}" if channel is not None else f"#{match.group(0)}"
+
+    message_text = re.sub(r'<@(\d+)>', repl_user_id, message_text)
+    message_text = re.sub(r'<@&(\d+)>', repl_role_id, message_text)
+    message_text = re.sub(r'https?://discord.com/channels/\d+/(\d+)', repl_channel_id_link, message_text)
+    message_text = re.sub(r'<#(\d+)>', repl_channel_id_wrap, message_text)
+    message_text = re.sub(r'<:(\w+):\d+>', r':\1:', message_text)
+    message_text = re.sub(r'<a:(\w+):\d+>', r':\1:', message_text)
+
+    return message_text
+
 
         
 def signal_handler(signal, frame):
@@ -161,6 +226,9 @@ async def close_bot(ctx):
 
     # Use the custom signal handler to close the bot
     os.kill(os.getpid(), signal.SIGINT)
+
+
+
 
 signal.signal(signal.SIGINT, signal_handler)
 bot.run(DISCORD_API_KEY)
