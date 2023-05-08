@@ -147,28 +147,23 @@ async def convert_image_to_text(image_url):
 
 async def news_text_to_summary(raw_text):
     prompt = (     
-        [{"role": "user", 
+        [{"role": "system", 
           "content": "extract the maintenance dates and new events and their dates from the following text"},]
         + [{"role": "user", 
             "content": raw_text},]
     )    
-    summary_text = await chatGPT.GPT_general(prompt, 0.3)
+    summary_text = await chatGPT.chat_completion(messages = prompt, max_tokens = 300, temperature = 0.3)
     return summary_text
 
 async def news_summary_to_calendar(summary, tag):
     prompt = (     
-        [{"role": "user", 
-          "content": ("For each maintenance and event listed, convert the given information into the format: "
-"start_time, end_time, title. Use none for events that do not have a specific start time provided. Format start_time and end_time using Python's datetime.isoformat(). Please make sure to use the correct start date for each event, especially if it is not provided. Use 2023 for year if no year is provided."
-"Example output:"
-"2023-04-22T22:00:00,2023-04-23T22:00:00,Maintenance"
-"none,2023-04-25T06:00:00,Heaven's Gate"
-"2023-04-23T22:00:00,2023-04-30T20:00:00,Samir Limited Order")},]
+        [{"role": "system", 
+          "content": "For each event and maintenance listed, convert the given information into the format: start_time, end_time, title. Use the maintenance end time as the start_time for events that do not have a specific start time provided. Format start_time and end_time using Python's datetime.isoformat(). Please make sure to use the correct start date for each event, even if it is not explicitly mentioned."},]
         + [{"role": "user", 
-            "content": summary},]
+            "content": "[local timezone: GMT-4]\n" + summary},]
     )
     logging.info("Before GPT_generate() call")
-    calendar_text = await chatGPT.GPT_general(prompt, 0.3)
+    calendar_text = chatGPT.chat_completion(model = "gpt-4", messages = prompt, max_tokens = 300, temperature = 0.3)
     logging.info("After GPT_generate() call")
     #print("finished summary")
     #print(calendar_text)

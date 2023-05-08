@@ -105,32 +105,33 @@ async def on_message(message_obj):
         # If the message starts with a valid command, process it 
         await bot.process_commands(message_obj)
 
+async def execute_command(ctx, command, args):
+    if command in bot.all_commands:
+        cmd_obj = bot.get_command(command)
+        await ctx.invoke(cmd_obj, *args)
+        return True
+    return False
 
 async def none_command(message_obj, message_text, logs):
-    generated_message = await chatGPT.GPT_command(message_obj.content)
     GPT_message = message_obj.author.name + ": " + message_text
+    generated_command_message_task = chatGPT.GPT_command(message_obj.content)
+    generated_none_command_task = chatGPT.GPT_mei(GPT_message, logs)
+    generated_command_message, generated_none_command = await asyncio.gather(generated_command_message_task, generated_none_command_task)
+    ctx = await bot.get_context(message_obj)
     #print("Logs before passing to GPT_general: ", logs)
 
-    if generated_message.strip().startswith("!"):
+    if generated_command_message.strip().startswith("!"):
         #print("gpt output starts with !")
-        command_message = generated_message.split()[0][1:]  # Remove the '!' from the command
+        command_message = generated_command_message.split()[0][1:]  # Remove the '!' from the command
         command_message = command_message[0] + command_message[1:].replace(".", "")
         words = command_message.split()
         command = words[0]
-        args = generated_message.split()[1:]  # Get the arguments, if any
-        # Check if the command exists and invoke it
-        if command in bot.all_commands:
-            cmd_obj = bot.get_command(command)
-            ctx = await bot.get_context(message_obj)
-            #print("invoking command")
-            await ctx.invoke(cmd_obj, *args)
-        else:
-            #print("not valid command, output as normal message")
-            generated_none_command = await chatGPT.GPT_mei(GPT_message, logs)
+        args = generated_command_message.split()[1:]  # Get the arguments, if any
+        command_executed = await execute_command(ctx, command, args)
+        
+        if not command_executed:
             await ctx.send(generated_none_command)
     else:
-        #print("normal message")
-        generated_none_command = await chatGPT.GPT_mei(GPT_message, logs)
         await ctx.send(generated_none_command)
 
 
