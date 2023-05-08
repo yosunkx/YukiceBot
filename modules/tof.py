@@ -46,3 +46,8 @@ async def add_tof_daily():
 
 async def tof_change_date(activity,new_date):
     return None
+
+
+
+if __name__ == "__main__":
+    pass

@@ -18,6 +18,7 @@ import re
 
 load_dotenv()
 DISCORD_API_KEY = os.getenv('DISCORD_BOT_TOKEN')
+test_promt = os.getenv('test_promt')
 
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix=commands.when_mentioned_or('!', '<@!1097341747459272845>'), intents=intents)
@@ -38,17 +39,36 @@ async def on_ready():
 async def on_message(message_obj):
     #valid channel ids to store as memory
     valid_channel_ids = {370007994831863810, 1102494872356786227, 1097616064407408651}
+    test_channel_id = 1102494872356786227
     processed_content = await process_message_content(message_obj)
 
     if message_obj.channel.id in valid_channel_ids:
-        async with message_logs.lock:
-            if message_obj.author == bot.user:               
-                print("Appending assistant message:", "Mei: " + processed_content)
-                await message_logs.append(message_obj.guild.id, {"role": "assistant", "content": "Mei: " + processed_content})
+        if message_obj.channel.id != test_channel_id:
+            async with message_logs.lock:
+                if message_obj.author == bot.user:               
+                    print("Appending assistant message:", "Mei: " + processed_content)
+                    await message_logs.append(message_obj.guild.id, {"role": "assistant", "content": "Mei: " + processed_content})
+                    return
+                else:
+                    print("Appending user message:", message_obj.author.name + ": " + processed_content)
+                    await message_logs.append(message_obj.guild.id, {"role": "user", "content": message_obj.author.name + ": " + processed_content})
+        else:
+        #personal test channel 
+            if message_obj.author == bot.user:   
+                await message_logs.append(message_obj.guild.id, {"role": "assistant", "content": processed_content})
                 return
             else:
-                print("Appending user message:", message_obj.author.name + ": " + processed_content)
-                await message_logs.append(message_obj.guild.id, {"role": "user", "content": message_obj.author.name + ": " + processed_content})
+                await message_logs.append(message_obj.guild.id, {"role": "user", "content": processed_content})
+                ctx = await bot.get_context(message_obj)
+                logs = list(message_logs.get_messages(ctx.guild.id)['deque'])[:-1]
+                prompt = (     
+                    [{"role": "system", "content": test_promt}]
+                    + logs
+                    + [{"role": "user", "content": processed_content}]
+                    )
+                generated_test_message = await chatGPT.chat_completion(messages = prompt, temperature = 1.2)
+                await ctx.send(generated_test_message)
+                return
     else:
         return
 

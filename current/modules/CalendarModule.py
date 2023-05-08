@@ -279,3 +279,9 @@ async def check_similar(new_event_summary, old_event_summary):
 def setup(bot):
     bot.add_command(add_test_event)
     bot.add_command(events)
+
+
+
+
+if __name__ == "__main__":
+    pass
