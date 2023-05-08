@@ -1,6 +1,5 @@
 def change event
 push tof dailies
 standard system logs
-fix summary
 change all functions to return and pass datetime obj 
-update mei persona
+vectorDB

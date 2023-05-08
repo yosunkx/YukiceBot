@@ -163,7 +163,7 @@ async def news_summary_to_calendar(summary, tag):
             "content": "[local timezone: GMT-4]\n" + summary},]
     )
     logging.info("Before GPT_generate() call")
-    calendar_text = chatGPT.chat_completion(model = "gpt-4", messages = prompt, max_tokens = 300, temperature = 0.3)
+    calendar_text = await chatGPT.chat_completion(model = "gpt-4", messages = prompt, max_tokens = 300, temperature = 0.3)
     logging.info("After GPT_generate() call")
     #print("finished summary")
     #print(calendar_text)
@@ -208,3 +208,8 @@ async def news_summary_to_calendar(summary, tag):
 #if __name__ == '__main__':
 #    import asyncio
 #    asyncio.run(main())
+
+
+
+if __name__ == "__main__":
+    pass

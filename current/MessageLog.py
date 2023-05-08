@@ -114,6 +114,7 @@ class MessageLogs:
                     print(f"loaded memory: {key}")
 
 
-
+if __name__ == "__main__":
+    pass
 
 
