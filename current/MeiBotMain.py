@@ -38,12 +38,11 @@ async def on_ready():
 async def on_message(message_obj):
     #valid channel ids to store as memory
     valid_channel_ids = {370007994831863810, 1102494872356786227, 1097616064407408651}
-
     processed_content = await process_message_content(message_obj)
 
     if message_obj.channel.id in valid_channel_ids:
         async with message_logs.lock:
-            if message_obj.author == bot.user:
+            if message_obj.author == bot.user:               
                 print("Appending assistant message:", "Mei: " + processed_content)
                 await message_logs.append(message_obj.guild.id, {"role": "assistant", "content": "Mei: " + processed_content})
                 return
@@ -77,7 +76,7 @@ async def on_message(message_obj):
                 await bot.invoke(ctx)
                 return
             else:
-                await none_command(processed_content, message_obj, list(message_logs.get_messages(ctx.guild.id)['deque'])[:-1])
+                await none_command(message_obj, processed_content, list(message_logs.get_messages(ctx.guild.id)['deque'])[:-1])
 
     # Process other messages
     if ctx.command is None:
@@ -92,7 +91,7 @@ async def on_message(message_obj):
             if user_message.startswith(mention_prefix):
                 user_message = user_message[len(mention_prefix):].strip()
             if user_message:
-                await none_command(processed_content, message_obj, list(message_logs.get_messages(ctx.guild.id)['deque'])[:-1])
+                await none_command(message_obj, processed_content, list(message_logs.get_messages(ctx.guild.id)['deque'])[:-1])
             return
         else:
             # If the message starts with a mention of the bot
@@ -100,38 +99,39 @@ async def on_message(message_obj):
             if message_obj.content.startswith(mention_prefix):
                 stripped_message = message_obj.content[len(mention_prefix):].strip()
                 if stripped_message:
-                    await none_command(processed_content, message_obj, list(message_logs.get_messages(ctx.guild.id)['deque'])[:-1])
+                    await none_command(message_obj, processed_content, list(message_logs.get_messages(ctx.guild.id)['deque'])[:-1])
                     return
     else:
         # If the message starts with a valid command, process it 
         await bot.process_commands(message_obj)
 
+async def execute_command(ctx, command, args):
+    if command in bot.all_commands:
+        cmd_obj = bot.get_command(command)
+        await ctx.invoke(cmd_obj, *args)
+        return True
+    return False
 
-async def none_command(message_text, message_obj, logs):
-    generated_message = await chatGPT.GPT_command(message_text)
+async def none_command(message_obj, message_text, logs):
     GPT_message = message_obj.author.name + ": " + message_text
+    generated_command_message_task = chatGPT.GPT_command(message_obj.content)
+    generated_none_command_task = chatGPT.GPT_mei(GPT_message, logs)
+    generated_command_message, generated_none_command = await asyncio.gather(generated_command_message_task, generated_none_command_task)
+    ctx = await bot.get_context(message_obj)
     #print("Logs before passing to GPT_general: ", logs)
 
-    if generated_message.strip().startswith("!"):
+    if generated_command_message.strip().startswith("!"):
         #print("gpt output starts with !")
-        command_message = generated_message.split()[0][1:]  # Remove the '!' from the command
+        command_message = generated_command_message.split()[0][1:]  # Remove the '!' from the command
         command_message = command_message[0] + command_message[1:].replace(".", "")
         words = command_message.split()
         command = words[0]
-        args = generated_message.split()[1:]  # Get the arguments, if any
-        # Check if the command exists and invoke it
-        if command in bot.all_commands:
-            cmd_obj = bot.get_command(command)
-            ctx = await bot.get_context(message_obj)
-            #print("invoking command")
-            await ctx.invoke(cmd_obj, *args)
-        else:
-            #print("not valid command, output as normal message")
-            generated_none_command = await chatGPT.GPT_mei(GPT_message, logs)
+        args = generated_command_message.split()[1:]  # Get the arguments, if any
+        command_executed = await execute_command(ctx, command, args)
+        
+        if not command_executed:
             await ctx.send(generated_none_command)
     else:
-        #print("normal message")
-        generated_none_command = await chatGPT.GPT_mei(GPT_message, logs)
         await ctx.send(generated_none_command)
 
 
