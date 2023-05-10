@@ -33,13 +33,6 @@ bld/
 [Ll]og/
 [Ll]ogs/
 
-.env
-meibot-384017-177d6e3bc3bb.json
-memory/
-current/
-__pycache__/
-deploy.py
-
 # Visual Studio 2015/2017 cache/options directory
 .vs/
 # Uncomment if you have tasks that create the project's static files in wwwroot
@@ -368,3 +361,11 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+current/
+.idea/
+.env
+meibot-384017-177d6e3bc3bb.json
+memory/
+__pycache__/
+deploy.py

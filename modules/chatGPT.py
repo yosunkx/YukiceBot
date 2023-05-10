@@ -5,7 +5,7 @@ import asyncio
 from asyncio.exceptions import TimeoutError
 from dotenv import load_dotenv
 import logging
-from modules import  gpt_persona
+from modules import gpt_persona
 from modules import ConsoleLog
 
 logger = ConsoleLog.set_logging('mylog.log')
@@ -17,7 +17,7 @@ model_engine = "gpt-3.5-turbo"
 model_engine_2 = "gpt-4"
 personality_temperature = 1
 max_tokens = 75
-mei_personality = gpt_persona.personality_test3
+mei_personality = gpt_persona.personality_test6
 
 async def chat_completion(model=model_engine, messages=None, max_tokens=200, temperature=0.7):
     openai.api_key = OPENAI_API_KEY
