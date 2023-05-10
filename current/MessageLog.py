@@ -5,6 +5,11 @@ import chatGPT
 import os
 import json
 import asyncio
+import ConsoleLog
+import logging
+
+logger = ConsoleLog.set_logging('mylog.log')
+#use it like this: logger.info('log message')
 
 
 def generate_random_ID():
@@ -60,6 +65,7 @@ class MessageLogs:
         return sum(len(message["content"].split()) for message in messages)
 
     async def _truncate_and_summarize(self, key):
+        logger.info("summarizing")
         half_length = self.token_limit // 2
         messages_to_summarize = []
         while self._token_count(self._data[key]['deque']) > half_length:
@@ -111,7 +117,7 @@ class MessageLogs:
                 with open(f'memory/{filename}', 'r', encoding='utf-8') as f:
                     data = json.load(f)
                     self._data[key] = {'deque': deque(data)}
-                    print(f"loaded memory: {key}")
+                    logger.info(f"loaded memory: {key}")
 
 
 if __name__ == "__main__":
