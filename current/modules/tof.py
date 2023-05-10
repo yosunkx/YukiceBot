@@ -5,6 +5,11 @@ from discord.ext import commands
 from random import random
 from . import CalendarModule
 from dotenv import load_dotenv, set_key
+import ConsoleLog
+import logging
+
+logger = ConsoleLog.set_logging('mylog.log')
+#use it like this: logger.info('log message')
 
 load_dotenv()
 raid_day = os.getenv('RAID_DAY') or '1'
