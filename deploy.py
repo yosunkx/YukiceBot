@@ -2,10 +2,12 @@ import os
 import shutil
 import subprocess
 
+
 def delete_pycache(dir_path):
     for root, dirs, files in os.walk(dir_path):
         if "__pycache__" in dirs:
             shutil.rmtree(os.path.join(root, "__pycache__"))
+
 
 def copy_project_files(src, dest):
     for item in os.listdir(src):
@@ -17,6 +19,7 @@ def copy_project_files(src, dest):
         elif os.path.isfile(s) and item not in ["deploy.py"]:
             shutil.copy2(s, d)
 
+
 def delete_contents_except_memory(folder):
     for item in os.listdir(folder):
         path = os.path.join(folder, item)
@@ -25,6 +28,7 @@ def delete_contents_except_memory(folder):
                 os.remove(path)
             else:
                 shutil.rmtree(path)
+
 
 def main():
     project_root = os.path.dirname(os.path.realpath(__file__))
@@ -44,6 +48,7 @@ def main():
     meibot_main = os.path.join(current_folder, "MeiBotMain.py")
     os.chdir(current_folder)  # Change the working directory to the 'current' folder
     subprocess.run(["python", meibot_main])
+
 
 if __name__ == "__main__":
     main()

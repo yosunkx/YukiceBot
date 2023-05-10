@@ -3,21 +3,27 @@ import asyncio
 import datetime
 from discord.ext import commands
 from random import random
-from . import CalendarModule
+from modules import CalendarModule, ConsoleLog
 from dotenv import load_dotenv, set_key
+import logging
+
+logger = ConsoleLog.set_logging('mylog.log')
 
 load_dotenv()
 raid_day = os.getenv('RAID_DAY') or '1'
 void_day = os.getenv('VOID_DAY') or '5'
 fch_day = os.getenv('FCH_DAY') or '6'
 
+
 @commands.command()
 async def add_tof_dailies(ctx):
     daily_content = await add_tof_daily()
-    print (f"next daily added: {daily_content}")
+    logger.info(f"next daily added: {daily_content}")
+
 
 def setup(bot):
     bot.add_command(add_tof_dailies)
+
 
 async def add_tof_daily():
     description = 'check old man otherwise JJ'
@@ -44,5 +50,6 @@ async def add_tof_daily():
     await CalendarModule.add_event(start_time, None, 'tower of fantasy dailies', description, 'ToF-d')
     return description
 
-async def tof_change_date(activity,new_date):
+
+async def tof_change_date(activity, new_date):
     return None

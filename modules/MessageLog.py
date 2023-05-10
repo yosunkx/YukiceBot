@@ -1,50 +1,54 @@
 from collections import deque
 import random
 import string
-import chatGPT
+from modules import chatGPT, ConsoleLog
 import os
 import json
 import asyncio
+import logging
+
+logger = ConsoleLog.set_logging('mylog.log')
 
 
 def generate_random_ID():
     return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(6))
 
+
 class MessageID(object):
     def __init__(self):
         self.items = []
-    
+
     def enqueue(self, item):
         if len(self.items) >= 10:
-           self.dequeue()
+            self.dequeue()
 
         self.items.append(item)
-    
+
     def dequeue(self):
         if not self.is_empty():
             return self.items.pop(0)
         else:
-            print("Queue is empty, cannot dequeue.")
-    
+            logger.debug("Queue is empty, cannot dequeue.")
+
     def is_empty(self):
         return len(self.items) == 0
-    
+
     def size(self):
         return len(self.items)
-    
+
     def peek(self):
         if not self.is_empty():
             return self.items[0]
         else:
-            print("Queue is empty, cannot peek.")
+            logger.debug("Queue is empty, cannot peek.")
 
     def print(self):
         if self.is_empty():
-            print('empty ID')
+            logger.debug('empty ID')
         else:
             for item in self.items:
                 print(item)
-    
+
     def contains(self, item):
         return item in self.items
 
@@ -60,6 +64,7 @@ class MessageLogs:
         return sum(len(message["content"].split()) for message in messages)
 
     async def _truncate_and_summarize(self, key):
+        logger.info("summarizing")
         half_length = self.token_limit // 2
         messages_to_summarize = []
         while self._token_count(self._data[key]['deque']) > half_length:
@@ -100,7 +105,6 @@ class MessageLogs:
             with open(f'memory/{str(key)}.json', 'w', encoding='utf-8') as f:
                 json.dump(list(data['deque']), f)
 
-
     def load_logs(self):
         if not os.path.exists('memory'):
             return
@@ -111,5 +115,8 @@ class MessageLogs:
                 with open(f'memory/{filename}', 'r', encoding='utf-8') as f:
                     data = json.load(f)
                     self._data[key] = {'deque': deque(data)}
-                    print(f"loaded memory: {key}")
+                    logger.info(f"loaded memory: {key}")
 
+    @property
+    def data(self):
+        return self._data

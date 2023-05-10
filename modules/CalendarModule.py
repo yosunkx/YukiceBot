@@ -1,8 +1,4 @@
-import os
 import asyncio
-from pickle import NONE
-from pydoc import describe
-import aiohttp
 from dotenv import load_dotenv
 from google.oauth2 import service_account
 from googleapiclient.errors import HttpError
@@ -10,11 +6,11 @@ from googleapiclient.discovery import build
 from discord.ext import commands
 from discord.ext import tasks
 import discord
-import chatGPT
 from datetime import datetime as dt
 import datetime
-import MessageLog
-from . import tof
+import logging
+import os
+from modules import tof, chatGPT, MessageLog, ConsoleLog
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -27,6 +23,8 @@ credentials = service_account.Credentials.from_service_account_file(
         SERVICE_ACCOUNT_FILE, scopes=SCOPES)
 
 MessageID_log = MessageLog.MessageID()
+
+logger = ConsoleLog.set_logging('mylog.log')
 
 load_dotenv('.env')
 
