@@ -1,5 +1,5 @@
-from mailbox import Message
 import os
+from mailbox import Message
 import asyncio
 import datetime
 from dotenv import load_dotenv
@@ -14,41 +14,68 @@ import chatGPT
 import signal
 import modules.news as news
 import re
+import ConsoleLog
+import logging
+
+logger = ConsoleLog.set_logging('mylog.log')
+#use it like this: logger.info('log message')
 
 
 load_dotenv()
 DISCORD_API_KEY = os.getenv('DISCORD_BOT_TOKEN')
+test_promt = os.getenv('test_promt')
 
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix=commands.when_mentioned_or('!', '<@!1097341747459272845>'), intents=intents)
 
 message_logs = MessageLog.MessageLogs()
 
-AUTHORIZED_USER_ID = 104055116897722368
+AUTHORIZED_USER_ID = 104055116897722368 
 
 modules.setup_all_modules(bot)
 
 @bot.event
 async def on_ready():
-    print('Logged in as {0.user}'.format(bot))
-    print('You can invite the bot by using the following url: ' + discord.utils.oauth_url(bot.user.id))
+    logger.info('Logged in as {0.user}'.format(bot))
+    logger.info('You can invite the bot by using the following url: ' + discord.utils.oauth_url(bot.user.id))
     CalenderModule.check_events.start(bot)
 
 @bot.event
 async def on_message(message_obj):
     #valid channel ids to store as memory
     valid_channel_ids = {370007994831863810, 1102494872356786227, 1097616064407408651}
+    test_channel_id = 1102494872356786227
     processed_content = await process_message_content(message_obj)
 
     if message_obj.channel.id in valid_channel_ids:
-        async with message_logs.lock:
-            if message_obj.author == bot.user:               
-                print("Appending assistant message:", "Mei: " + processed_content)
-                await message_logs.append(message_obj.guild.id, {"role": "assistant", "content": "Mei: " + processed_content})
+        if message_obj.channel.id != test_channel_id:
+            async with message_logs.lock:
+                if message_obj.author == bot.user:        
+                    if processed_content != "The bot will now close.":
+                        logger.debug("Mei: " + processed_content)
+                        await message_logs.append(message_obj.guild.id, {"role": "assistant", "content": "Mei: " + processed_content})
+                    return
+                else:
+                    if processed_content != "!close_bot":
+                        logger.debug(f"{message_obj.author.name}: {processed_content}")
+                        await message_logs.append(message_obj.guild.id, {"role": "user", "content": message_obj.author.name + ": " + processed_content})
+        else:
+        #personal test channel 
+            if message_obj.author == bot.user:   
+                await message_logs.append(message_obj.guild.id, {"role": "assistant", "content": processed_content})
                 return
             else:
-                print("Appending user message:", message_obj.author.name + ": " + processed_content)
-                await message_logs.append(message_obj.guild.id, {"role": "user", "content": message_obj.author.name + ": " + processed_content})
+                await message_logs.append(message_obj.guild.id, {"role": "user", "content": processed_content})
+                ctx = await bot.get_context(message_obj)
+                logs = list(message_logs.get_messages(ctx.guild.id)['deque'])[:-1]
+                prompt = (     
+                    logs
+                    + [{"role": "system", "content": test_promt}]
+                    + [{"role": "user", "content": processed_content}]
+                    )
+                generated_test_message = await chatGPT.chat_completion(messages = prompt, temperature = 1.2, max_tokens = 800)
+                await ctx.send(generated_test_message)
+                return
     else:
         return
 
@@ -105,33 +132,71 @@ async def on_message(message_obj):
         # If the message starts with a valid command, process it 
         await bot.process_commands(message_obj)
 
+@bot.command()
+async def time_out(ctx, member: discord.Member, timeout_duration=30, gpt_invoke=False):
+    if not gpt_invoke and ctx.author.id != AUTHORIZED_USER_ID and ctx.author.id != ctx.bot.user.id:
+        await ctx.send("You do not have permission to use this command.")
+        return
+
+    muted_role = discord.utils.get(ctx.guild.roles, name="muted")
+    if not muted_role:
+        muted_role = await ctx.guild.create_role(name="muted")
+        for channel in ctx.guild.channels:
+            await channel.set_permissions(muted_role, send_messages=False)
+
+    await member.add_roles(muted_role)
+    await ctx.send(f"{member.mention} has been timed out for {timeout_duration} seconds.")
+    await asyncio.sleep(timeout_duration)
+    await member.remove_roles(muted_role)
+
+
+async def GPT_time_out(bot, mei_response_string, message_obj):
+
+    prompt = [
+        {"role": "system", "content": "You are now a robot that is only capable of outputing numbers. On a scale of 1 to 10 from not annoyed to very annoyed, how annoyed do you think Mei is?. Example output: 3; 10; 9;"},
+        {"role": "user", "content": "Mei: " + mei_response_string}
+    ]
+    response_string = await chatGPT.chat_completion(messages=prompt, max_tokens=40, temperature=0.3)
+    logger.info(f"annoyance: {response_string}")
+
+    if any(str(num) in response_string for num in range(9, 11)):
+        ctx = await bot.get_context(message_obj)
+        author = message_obj.author
+        await time_out(ctx, author, gpt_invoke=True)
+    else:
+        return
+
+
+async def execute_command(ctx, command, args):
+    if command in bot.all_commands:
+        cmd_obj = bot.get_command(command)
+        await ctx.invoke(cmd_obj, *args)
+        return True
+    return False
 
 async def none_command(message_obj, message_text, logs):
-    generated_message = await chatGPT.GPT_command(message_obj.content)
     GPT_message = message_obj.author.name + ": " + message_text
+    generated_command_message_task = chatGPT.GPT_command(message_obj.content)
+    generated_none_command_task = chatGPT.GPT_mei(GPT_message, logs)
+    generated_command_message, generated_none_command = await asyncio.gather(generated_command_message_task, generated_none_command_task)
+    ctx = await bot.get_context(message_obj)
     #print("Logs before passing to GPT_general: ", logs)
 
-    if generated_message.strip().startswith("!"):
+    if generated_command_message.strip().startswith("!"):
         #print("gpt output starts with !")
-        command_message = generated_message.split()[0][1:]  # Remove the '!' from the command
+        command_message = generated_command_message.split()[0][1:]  # Remove the '!' from the command
         command_message = command_message[0] + command_message[1:].replace(".", "")
         words = command_message.split()
         command = words[0]
-        args = generated_message.split()[1:]  # Get the arguments, if any
-        # Check if the command exists and invoke it
-        if command in bot.all_commands:
-            cmd_obj = bot.get_command(command)
-            ctx = await bot.get_context(message_obj)
-            #print("invoking command")
-            await ctx.invoke(cmd_obj, *args)
-        else:
-            #print("not valid command, output as normal message")
-            generated_none_command = await chatGPT.GPT_mei(GPT_message, logs)
+        args = generated_command_message.split()[1:]  # Get the arguments, if any
+        command_executed = await execute_command(ctx, command, args)
+        
+        if not command_executed:
             await ctx.send(generated_none_command)
+            await GPT_time_out(bot, generated_none_command, message_obj)
     else:
-        #print("normal message")
-        generated_none_command = await chatGPT.GPT_mei(GPT_message, logs)
         await ctx.send(generated_none_command)
+        await GPT_time_out(bot, generated_none_command, message_obj)
 
 
 @bot.command(name="print_log")
@@ -202,10 +267,9 @@ async def process_message_content(message_obj):
 
     return message_text
 
-
         
 def signal_handler(signal, frame):
-    print("Stopping the bot...")
+    logger.info("Stopping the bot...")
     loop = asyncio.get_event_loop()
     loop.stop()
 
@@ -226,9 +290,6 @@ async def close_bot(ctx):
 
     # Use the custom signal handler to close the bot
     os.kill(os.getpid(), signal.SIGINT)
-
-
-
 
 signal.signal(signal.SIGINT, signal_handler)
 bot.run(DISCORD_API_KEY)

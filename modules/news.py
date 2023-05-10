@@ -1,5 +1,6 @@
 from ast import Delete
 from calendar import calendar
+from cmath import exp
 from discord.ext import commands
 from discord.ext import tasks
 import discord
@@ -19,7 +20,11 @@ from playwright.async_api import async_playwright
 import httpx
 import chatGPT
 from . import CalendarModule
+import ConsoleLog
 import logging
+
+logger = ConsoleLog.set_logging('mylog.log')
+#use it like this: logger.info('log message')
 
 load_dotenv('.env')
 APIFY_TOKEN = os.getenv('APIFY_API_KEY')
@@ -35,9 +40,8 @@ async def process_message(message):
     if message.channel.category.id == news_category_id and message.author != bot_id:
         channel_name = message.channel.name
         tag = channel_name.split('-')[1]
-        print(f"converting news to text for: {tag}")
+        logger.info(f"converting news to text for: {tag}")
         news_text = await convert_to_text(message, tag)
-        #print(news_text)
         summary_text = await news_text_to_summary(news_text)
         await news_summary_to_calendar(summary_text, tag)
 
@@ -52,14 +56,14 @@ async def convert_to_text(message, tag):
         links = re.findall(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', line)
 
         if links:
-            print("found links")
+            logger.debug("found links")
             for link in links:
                 if 'twitter.com' in link:
-                    print("found twitter link")
+                    logger.debug("found twitter link")
                     tweet_text = await extract_text_from_tweet(link, tag)
                     output.append(tweet_text)
                 elif tag == 'tof':
-                    print("found tof link")
+                    logger.debug("found tof link")
                     link_text = await extract_text_from_link(link, tag)
                     output.append(link_text)
         else:
@@ -76,7 +80,7 @@ async def convert_to_text(message, tag):
     return '\n'.join(output)
 
 async def extract_text_from_tweet(tweet_link, tag):
-    print("extracting text from tweet")
+    logger.debug("extracting text from tweet")
     apify_client = ApifyClientAsync(APIFY_TOKEN)
     run_input = {
         "startUrls": [{"url": tweet_link}],
@@ -104,7 +108,7 @@ async def extract_text_from_tweet(tweet_link, tag):
     return full_text_output
 
 async def extract_text_from_link(url, tag):
-    print("extracting text from link")
+    logger.debug("extracting text from link")
     async with async_playwright() as p:
         browser = await p.chromium.launch()
         context = browser.new_context()
@@ -134,7 +138,7 @@ async def extract_text_from_link(url, tag):
 
 
 async def convert_image_to_text(image_url):
-    print("extracting text from image")
+    logger.debug("extracting text from image")
     pytesseract.tesseract_cmd = path_to_tesseract
 
     # Get the image from the URL
@@ -147,42 +151,43 @@ async def convert_image_to_text(image_url):
 
 async def news_text_to_summary(raw_text):
     prompt = (     
-        [{"role": "user", 
+        [{"role": "system", 
           "content": "extract the maintenance dates and new events and their dates from the following text"},]
         + [{"role": "user", 
             "content": raw_text},]
     )    
-    summary_text = await chatGPT.GPT_general(prompt, 0.3)
+    summary_text = await chatGPT.chat_completion(messages = prompt, max_tokens = 300, temperature = 0.3)
+    logger.debug(summary_text)
     return summary_text
 
 async def news_summary_to_calendar(summary, tag):
     prompt = (     
-        [{"role": "user", 
-          "content": ("For each maintenance and event listed, convert the given information into the format: "
-"start_time, end_time, title. Use none for events that do not have a specific start time provided. Format start_time and end_time using Python's datetime.isoformat(). Please make sure to use the correct start date for each event, especially if it is not provided. Use 2023 for year if no year is provided."
-"Example output:"
-"2023-04-22T22:00:00,2023-04-23T22:00:00,Maintenance"
-"none,2023-04-25T06:00:00,Heaven's Gate"
-"2023-04-23T22:00:00,2023-04-30T20:00:00,Samir Limited Order")},]
+        [{"role": "system", 
+          "content": "For each event and maintenance listed, convert the given information into the format: start_time, end_time, title. Use the maintenance end time as the start_time for events that do not have a specific start time provided. Use start time for end time if no end time is provided. Format start_time and end_time using Python's datetime.isoformat() and convert them to UTC. Please make sure to use the correct start date for each event, even if it is not explicitly mentioned. Output 'No events and maintentance found' if no events AND maintenence are listed."},]
+        + [{"role": "system", 
+          "content": "Example output: 2023-04-22T22:00:00,2023-04-23T22:00:00,Maintenance 2023-04-22T22:00:00,2023-04-25T06:00:00,Heaven's Gate 2023-04-23T22:00:00,2023-04-30T20:00:00,Samir Limited Order"},]
         + [{"role": "user", 
-            "content": summary},]
+            "content": "[local timezone: GMT-4]\n" + summary},]
     )
-    logging.info("Before GPT_generate() call")
-    calendar_text = await chatGPT.GPT_general(prompt, 0.3)
-    logging.info("After GPT_generate() call")
-    #print("finished summary")
-    #print(calendar_text)
+    logger.debug("Before chat_completion() call")
+    calendar_text = await chatGPT.chat_completion(model = "gpt-4", messages = prompt, max_tokens = 300, temperature = 0.3)
+    logger.debug(calendar_text)
     lines = calendar_text.split("\n")
     event_list = []
     maintenance_end_time = ''
     for line in lines:
-        start_time, end_time, description = line.split(',')
-        if "maintenance" in description.lower():
-            if not maintenance_end_time:
-                maintenance_end_time = end_time
-        event_list.append((start_time, end_time, description))
+        try:
+            start_time, end_time, description = line.split(',')
+            if "maintenance" in description.lower():
+                if not maintenance_end_time:
+                    maintenance_end_time = end_time
+            if start_time and end_time and description:
+                event_list.append((start_time, end_time, description))
+        except:
+            logger.debug("not valid event (news_summary_to_text)")
 
     for event in event_list:
+        logger.info("adding events from news")
         start_time, end_time, description = event
         if start_time == 'none':
             if maintenance_end_time:
@@ -213,3 +218,8 @@ async def news_summary_to_calendar(summary, tag):
 #if __name__ == '__main__':
 #    import asyncio
 #    asyncio.run(main())
+
+
+
+if __name__ == "__main__":
+    pass

@@ -38,6 +38,7 @@ meibot-384017-177d6e3bc3bb.json
 memory/
 current/
 __pycache__/
+deploy.py
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
