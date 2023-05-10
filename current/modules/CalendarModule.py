@@ -13,6 +13,11 @@ import os
 from modules import tof, chatGPT, MessageLog, ConsoleLog
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+import ConsoleLog
+import logging
+
+logger = ConsoleLog.set_logging('mylog.log')
+#use it like this: logger.info('log message')
 
 SERVICE_ACCOUNT_FILE = 'C:/Users/Kevin/Documents/YukiceBot/meibot-384017-177d6e3bc3bb.json'
 SCOPES = ['https://www.googleapis.com/auth/calendar']
@@ -277,3 +282,9 @@ async def check_similar(new_event_summary, old_event_summary):
 def setup(bot):
     bot.add_command(add_test_event)
     bot.add_command(events)
+
+
+
+
+if __name__ == "__main__":
+    pass
