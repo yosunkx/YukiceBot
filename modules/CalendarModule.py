@@ -13,11 +13,9 @@ import os
 from modules import tof, chatGPT, MessageLog, ConsoleLog
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-import ConsoleLog
-import logging
 
 logger = ConsoleLog.set_logging('mylog.log')
-#use it like this: logger.info('log message')
+# use it like this: logger.info('log message')
 
 SERVICE_ACCOUNT_FILE = 'C:/Users/Kevin/Documents/YukiceBot/meibot-384017-177d6e3bc3bb.json'
 SCOPES = ['https://www.googleapis.com/auth/calendar']
@@ -25,7 +23,7 @@ CALENDAR_ID = '44b8574254d7e3ea33fd3d7e113fd5c77929f013b314cb94edafa410d45def6d@
 
 # Authenticate with the Google Calendar API using a service account
 credentials = service_account.Credentials.from_service_account_file(
-        SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+    SERVICE_ACCOUNT_FILE, scopes=SCOPES)
 
 MessageID_log = MessageLog.MessageID()
 
@@ -37,7 +35,7 @@ load_dotenv('.env')
 @commands.command()
 async def add_test_event(ctx):
     start_time = datetime.datetime.utcnow() + datetime.timedelta(minutes=2)
-    await add_event(start_time, None, 'test event', 'test event body','bottesting')
+    await add_event(start_time, None, 'test event', 'test event body', 'bottesting')
     bot_message = f"event added at {start_time.strftime('%Y-%m-%d %H:%M')}"
     GPT_message = await chatGPT.GPT_prompt(None, "add_test_event")
     await ctx.send(GPT_message + "\n" + bot_message)
@@ -67,6 +65,7 @@ async def events(ctx, end_date: str = None):
         GPT_message = await chatGPT.GPT_prompt(None, "events")
         await ctx.send(GPT_message + "\n" + output_string)
 
+
 @tasks.loop(minutes=1)
 async def check_events(bot):
     now = datetime.datetime.utcnow()
@@ -77,12 +76,12 @@ async def check_events(bot):
     events = await get_events(now_iso, now_plus_30_minutes)
 
     if events:
-        #print('event detected')
+        logger.debug('event detected')
         channel_message = ''
         role_names = []
         message_header = ''
         for event in events:
-            #print('event')
+            logger.debug('event')
             start_timestamp = event.get('start_timestamp', '')
             end_timestamp = event.get('end_timestamp', '')
             summary = event.get('summary', '')
@@ -100,8 +99,7 @@ async def check_events(bot):
             start_time = datetime.datetime.utcfromtimestamp(int(start_timestamp))
             end_time = datetime.datetime.utcfromtimestamp(int(end_timestamp))
 
-
-            if start_time <= check_time and start_time > now:
+            if check_time >= start_time > now:
                 if MessageID_log.contains(start_ID) or not message:
                     continue
                 if role:
@@ -176,7 +174,7 @@ async def add_event(start_time, end_time=None, summary=None, description=None, r
     try:
         service = build('calendar', 'v3', credentials=credentials)
         print("CALENDAR_ID:", CALENDAR_ID)
-        #check if similar event already exists
+        # check if similar event already exists
         check_start_time = start_time - datetime.timedelta(hours=12)
         check_end_time = end_time + datetime.timedelta(hours=12)
         existing_events = await get_events(check_start_time, check_end_time)
@@ -196,7 +194,7 @@ async def add_event(start_time, end_time=None, summary=None, description=None, r
                 if await check_similar(summary, check_event_summary):
                     return
 
-        #add event
+        # add event
         event = service.events().insert(calendarId=CALENDAR_ID, body=event).execute()
         print(f'Event created: {event.get("htmlLink")}')
     except HttpError as error:
@@ -205,8 +203,10 @@ async def add_event(start_time, end_time=None, summary=None, description=None, r
 
     return event
 
-async def change_event(summary, start_time, new_summary = None, new_message = None, new_start_time = None, new_end_time = None):
+
+async def change_event(summary, start_time, new_summary=None, new_message=None, new_start_time=None, new_end_time=None):
     return None
+
 
 async def get_events(start_time=None, end_time=None):
     loop = asyncio.get_event_loop()
@@ -226,9 +226,11 @@ async def get_events(start_time=None, end_time=None):
         service = await loop.run_in_executor(None, lambda: build('calendar', 'v3', credentials=credentials))
 
         # Wrap the synchronous API call in 'run_in_executor'
-        events_result = await loop.run_in_executor(None, lambda: service.events().list(calendarId=CALENDAR_ID, timeMin=start_time,
-                                      timeMax=end_time, singleEvents=True,
-                                      orderBy='startTime').execute())
+        events_result = await loop.run_in_executor(None, lambda: service.events().list(calendarId=CALENDAR_ID,
+                                                                                       timeMin=start_time,
+                                                                                       timeMax=end_time,
+                                                                                       singleEvents=True,
+                                                                                       orderBy='startTime').execute())
         events = events_result.get('items', [])
 
         if not events:
@@ -245,8 +247,9 @@ async def get_events(start_time=None, end_time=None):
                 start_ID, message, role_name, end_ID = description.split(';')
             else:
                 start_ID, message, role_name, end_ID = '', '', '', ''
-            event_list.append({"summary": event['summary'], "start_timestamp": start_timestamp, "end_timestamp": end_timestamp,
-                               "start_ID": start_ID, "message": message, "role_name": role_name, "end_ID": end_ID})
+            event_list.append(
+                {"summary": event['summary'], "start_timestamp": start_timestamp, "end_timestamp": end_timestamp,
+                 "start_ID": start_ID, "message": message, "role_name": role_name, "end_ID": end_ID})
 
         return event_list
     except HttpError as error:
@@ -256,7 +259,7 @@ async def get_events(start_time=None, end_time=None):
 
 
 async def check_similar(new_event_summary, old_event_summary):
-    similarity_threshold=0.4
+    similarity_threshold = 0.4
 
     summaries = [new_event_summary] + [old_event_summary]
 
@@ -274,16 +277,9 @@ async def check_similar(new_event_summary, old_event_summary):
     return False
 
 
-
-
-
-
-
 def setup(bot):
     bot.add_command(add_test_event)
     bot.add_command(events)
-
-
 
 
 if __name__ == "__main__":

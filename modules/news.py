@@ -158,28 +158,32 @@ async def news_summary_to_calendar(summary, tag):
     prompt = (
             [{"role": "user",
               "content": ("For each maintenance and event listed, convert the given information into the format: "
-                          "start_time, end_time, title. Use none for events that do not have a specific start time provided. Format start_time and end_time using Python's datetime.isoformat(). Please make sure to use the correct start date for each event, especially if it is not provided. Use 2023 for year if no year is provided."
+                          "start_time(in UTC+0), end_time(in UTC+0), title. Use maintenance start time for events "
+                          "that do not have a specific start time provided. Format start_time and end_time using "
+                          "Python's datetime.isoformat(). Please make sure to use the correct start date for each "
+                          "event, especially if it is not explicitly provided. Use 2023 for year if no year is provided. Assume "
+                          "local time zone of UTC-4 if no timezone stated."
                           "Example output:"
                           "2023-04-22T22:00:00,2023-04-23T22:00:00,Maintenance"
-                          "none,2023-04-25T06:00:00,Heaven's Gate"
+                          "2023-04-23T22:00:00,2023-04-25T06:00:00,Heaven's Gate"
                           "2023-04-23T22:00:00,2023-04-30T20:00:00,Samir Limited Order")}, ]
             + [{"role": "user",
                 "content": summary}, ]
     )
-    logger.debug("Before chat_completion call")
-    calendar_text = await chatGPT.chat_completion(messages=prompt, max_tokens=300, temperature=0.3)
-    logger.debug("After chat_completion call")
-    logger.debug("finished summary")
+    calendar_text = await chatGPT.chat_completion(model='gpt-4', messages=prompt, max_tokens=300, temperature=0.3)
     logger.debug(calendar_text)
     lines = calendar_text.split("\n")
     event_list = []
     maintenance_end_time = ''
     for line in lines:
-        start_time, end_time, description = line.split(',')
-        if "maintenance" in description.lower():
-            if not maintenance_end_time:
-                maintenance_end_time = end_time
-        event_list.append((start_time, end_time, description))
+        try:
+            start_time, end_time, description = line.split(',')
+            if "maintenance" in description.lower():
+                if not maintenance_end_time:
+                    maintenance_end_time = end_time
+            event_list.append((start_time, end_time, description))
+        except:
+            logger.info("invalid event format (news)")
 
     for event in event_list:
         start_time, end_time, description = event
@@ -192,7 +196,8 @@ async def news_summary_to_calendar(summary, tag):
         await CalendarModule.add_event(start_time, end_time, description, description, tag)
 
 # async def main():
-#    test_link = 'https://www.toweroffantasy-global.com/news-detail.html?content_id=8231a552a7994a4c23a8b82aebe2539ee11b'
+#    test_link = 'https://www.toweroffantasy-global.com/news-detail.html?content_id
+#    =8231a552a7994a4c23a8b82aebe2539ee11b'
 #    text = await extract_text_from_link(test_link, 'tof')
 #    print(text)
 

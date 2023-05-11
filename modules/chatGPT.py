@@ -5,8 +5,7 @@ import asyncio
 from asyncio.exceptions import TimeoutError
 from dotenv import load_dotenv
 import logging
-from modules import gpt_persona
-from modules import ConsoleLog
+from modules import gpt_persona, ConsoleLog
 
 logger = ConsoleLog.set_logging('mylog.log')
 
@@ -18,6 +17,7 @@ model_engine_2 = "gpt-4"
 personality_temperature = 1
 max_tokens = 75
 mei_personality = gpt_persona.personality_test6
+
 
 async def chat_completion(model=model_engine, messages=None, max_tokens=200, temperature=0.7):
     openai.api_key = OPENAI_API_KEY
@@ -73,7 +73,7 @@ async def GPT_mei(message_text, context=None):
             + [{"role": "user", "content": message_text}, ]
     )
 
-    response_string = await chat_completion(model=model, prompt_messages=prompt, max_tokens=70, temperature=1)
+    response_string = await chat_completion(model=model, messages=prompt, max_tokens=70, temperature=1)
 
     return response_string
 
@@ -85,7 +85,7 @@ async def GPT_command(message):
             + [{"role": "user", "content": message}, ]
     )
 
-    response_string = await chat_completion(prompt_messages=prompt, max_tokens=25, temperature=0.4)
+    response_string = await chat_completion(messages=prompt, max_tokens=25, temperature=0.4)
 
     return response_string
 
@@ -93,7 +93,9 @@ async def GPT_command(message):
 async def GPT_log_summary(messages_to_summarize):
     prompt = [
         {"role": "system",
-         "content": "Summarize the previous summary and new message logs, focusing on dynamics and notable events, with a maximum word length of 250. Also, create a brief summary of each user's personality, excluding the bot/assistant called Mei, with a maximum word length of 50 for each user."},
+         "content": "Summarize the previous summary and new message logs, focusing on dynamics and notable events, "
+                    "with a maximum word length of 250. Also, create a brief summary of each user's personality, "
+                    "excluding the bot/assistant called Mei, with a maximum word length of 50 for each user."},
         *messages_to_summarize,
     ]
 

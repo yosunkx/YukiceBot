@@ -27,8 +27,8 @@ logger = ConsoleLog.set_logging('mylog.log')
 
 @bot.event
 async def on_ready():
-    print('Logged in as {0.user}'.format(bot))
-    print('You can invite the bot by using the following url: ' + discord.utils.oauth_url(bot.user.id))
+    logger.info('Logged in as {0.user}'.format(bot))
+    logger.info('You can invite the bot by using the following url: ' + discord.utils.oauth_url(bot.user.id))
     CalenderModule.check_events.start(bot)
 
 
@@ -47,7 +47,6 @@ async def on_message(message_obj):
                 return
             else:
                 logger.debug(message_obj.author.name + ": " + processed_content)
-                await gpt_time_out(bot, processed_content, message_obj)
                 await message_logs.append(message_obj.guild.id, {"role": "user",
                                                                  "content": message_obj.author.name + ": " + processed_content})
     else:
@@ -131,14 +130,16 @@ async def none_command(message_obj, message_text, logs):
         else:
             logger.debug("not valid command, output as normal message")
             generated_none_command = await chatGPT.GPT_mei(gpt_message, logs)
+            #await gpt_time_out(bot, generated_none_command, message_obj)
             await ctx.send(generated_none_command)
     else:
         logger.debug("normal message")
         generated_none_command = await chatGPT.GPT_mei(gpt_message, logs)
+        #await gpt_time_out(bot, generated_none_command, message_obj)
         await ctx.send(generated_none_command)
 
 
-@bot.command()
+""""@bot.command()
 async def time_out(ctx, member: discord.Member, timeout_duration=30, gpt_invoke=False):
     if not gpt_invoke and ctx.author.id != AUTHORIZED_USER_ID and ctx.author.id != ctx.bot.user.id:
         await ctx.send("You do not have permission to use this command.")
@@ -159,10 +160,10 @@ async def time_out(ctx, member: discord.Member, timeout_duration=30, gpt_invoke=
 async def gpt_time_out(bot_obj, mei_response_string, message_obj):
     prompt = [
         {"role": "system",
-         "content": "You are now a robot that is only capable of outputting numbers. on a scale of 1 to 10 from not annoyed to about to burst from annoyance, how annoyed do you think is Mei?."},
-        {"role": "user", "content": mei_response_string}
+         "content": "You are now a robot that is only capable of outputting numbers. on a scale of 1 to 10 from not annoyed to very annoyed, how annoyed do you think is Mei? Answer your best guess and only respond with a number."},
+        {"role": "user", "content": "Mei: " + mei_response_string}
     ]
-    response_string = await chatGPT.chat_completion(prompt_messages=prompt, max_tokens=40, temperature=0.3)
+    response_string = await chatGPT.chat_completion(messages=prompt, max_tokens=40, temperature=0.3)
     logger.info(f"annoyance: {response_string}")
 
     if any(str(num) in response_string for num in range(8, 11)):
@@ -170,7 +171,7 @@ async def gpt_time_out(bot_obj, mei_response_string, message_obj):
         author = message_obj.author
         await time_out(ctx, author, gpt_invoke=True)
     else:
-        return
+        return"""
 
 
 @bot.command(name="print_log")
