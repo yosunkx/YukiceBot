@@ -1,11 +1,9 @@
-from pyexpat.errors import messages
 import openai
 import os
 import asyncio
-from asyncio.exceptions import TimeoutError
 from dotenv import load_dotenv
-import logging
-from modules import gpt_persona, ConsoleLog
+from meibot.modules import gpt_persona
+from meibot.modules import ConsoleLog
 
 logger = ConsoleLog.set_logging('mylog.log')
 

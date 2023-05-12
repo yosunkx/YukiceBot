@@ -9,8 +9,8 @@ from pytesseract import pytesseract
 from io import BytesIO
 from playwright.async_api import async_playwright
 import httpx
-from modules import CalendarModule, chatGPT, ConsoleLog
-import logging
+from meibot.modules import CalendarModule
+from meibot.modules import ConsoleLog, chatGPT
 
 load_dotenv('.env')
 APIFY_TOKEN = os.getenv('APIFY_API_KEY')
@@ -106,7 +106,7 @@ async def extract_text_from_link(url, tag):
     logger.debug("extracting text from link")
     async with async_playwright() as p:
         browser = await p.chromium.launch()
-        context = browser.new_context()
+        context = await browser.new_context()
         page = await browser.new_page()
         await page.goto(url)
         texts = []
@@ -156,22 +156,21 @@ async def news_text_to_summary(raw_text):
 
 async def news_summary_to_calendar(summary, tag):
     prompt = (
-            [{"role": "user",
-              "content": ("For each maintenance and event listed, convert the given information into the format: "
-                          "start_time(in UTC+0), end_time(in UTC+0), title. Use maintenance start time for events "
-                          "that do not have a specific start time provided. Format start_time and end_time using "
-                          "Python's datetime.isoformat(). Please make sure to use the correct start date for each "
-                          "event, especially if it is not explicitly provided. Use 2023 for year if no year is provided. Assume "
-                          "local time zone of UTC-4 if no timezone stated."
-                          "Example output:"
-                          "2023-04-22T22:00:00,2023-04-23T22:00:00,Maintenance"
-                          "2023-04-23T22:00:00,2023-04-25T06:00:00,Heaven's Gate"
-                          "2023-04-23T22:00:00,2023-04-30T20:00:00,Samir Limited Order")}, ]
-            + [{"role": "user",
-                "content": summary}, ]
+            [{"role": "system", "content": (
+                "You'll be given a list of maintenance and event details. Your task is to reformat each item into "
+                "this structure: "
+                "'start_time(UTC+0), end_time(UTC+0), title'. If no start time is given for an event, "
+                "use the maintenance start time. "
+                "Start_time and end_time should be in Python's datetime.isoformat() and converted to UTC. "
+                "If a start time isn't explicitly given, use maintenance end time. If no year is provided, use 2023. "
+                "Assume a local time zone of UTC-4 if none is stated. "
+                "For example: '2023-04-22T22:00:00,2023-04-23T22:00:00,Maintenance' '2023-04-23T22:00:00,"
+                "2023-04-25T06:00:00,Heaven's Gate'")}, ]
+            + [{"role": "user", "content": summary}, ]
     )
+
     calendar_text = await chatGPT.chat_completion(model='gpt-4', messages=prompt, max_tokens=300, temperature=0.3)
-    logger.debug(calendar_text)
+    #print(calendar_text)
     lines = calendar_text.split("\n")
     event_list = []
     maintenance_end_time = ''
@@ -195,25 +194,18 @@ async def news_summary_to_calendar(summary, tag):
                 start_time = now.isoformat()
         await CalendarModule.add_event(start_time, end_time, description, description, tag)
 
-# async def main():
-#    test_link = 'https://www.toweroffantasy-global.com/news-detail.html?content_id
-#    =8231a552a7994a4c23a8b82aebe2539ee11b'
-#    text = await extract_text_from_link(test_link, 'tof')
-#    print(text)
 
-# async def main():
-#    raw_text = ''
-#    with open('C:/Users/Kevin/Documents/YukiceBot/modules/test_text.txt') as f:
-#        for line in f:
-#            raw_text += line
-#            raw_text += '\n'
+async def main():
+    test_link = 'https://www.toweroffantasy-global.com/news-detail.html?content_id=e7990722a1a27a4a09a9d15aa3ff6b96aebb'
+    logger.info("calling text_from_link")
+    text = await extract_text_from_link(test_link, 'tof')
+    # print(text)
+    logger.info("calling summarize")
+    summary = await news_text_to_summary(text)
+    #print(summary)
+    logger.info("calling calendar")
+    await news_summary_to_calendar(summary, 'tof')
 
-#    #print("calling summarize")
-#    summary = await news_text_to_summary(raw_text)
-#    #print(summary)
-#    #print("calling calendar")
-#    await news_summary_to_calendar(summary, 'tof')
 
-# if __name__ == '__main__':
-#    import asyncio
-#    asyncio.run(main())
+if __name__ == '__main__':
+    asyncio.run(main())

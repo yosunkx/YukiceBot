@@ -8,22 +8,27 @@ from discord.ext import tasks
 import discord
 from datetime import datetime as dt
 import datetime
-import logging
 import os
-from modules import tof, chatGPT, MessageLog, ConsoleLog
+from meibot.modules import MessageLog
+from meibot.modules import tof, ConsoleLog, chatGPT
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 logger = ConsoleLog.set_logging('mylog.log')
 # use it like this: logger.info('log message')
 
-SERVICE_ACCOUNT_FILE = 'C:/Users/Kevin/Documents/YukiceBot/meibot-384017-177d6e3bc3bb.json'
+# Get the absolute path of the directory of the script being run:
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Construct the full path to the service account file
+SERVICE_ACCOUNT_FILE = os.path.join(current_dir, "../meibot-384017-177d6e3bc3bb.json")
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 CALENDAR_ID = '44b8574254d7e3ea33fd3d7e113fd5c77929f013b314cb94edafa410d45def6d@group.calendar.google.com'
 
 # Authenticate with the Google Calendar API using a service account
 credentials = service_account.Credentials.from_service_account_file(
     SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+
 
 MessageID_log = MessageLog.MessageID()
 
@@ -243,9 +248,10 @@ async def get_events(start_time=None, end_time=None):
             start_timestamp = int(datetime.datetime.fromisoformat(start).timestamp())
             end_timestamp = int(datetime.datetime.fromisoformat(end).timestamp())
             description = event.get('description', '')
-            if description:
-                start_ID, message, role_name, end_ID = description.split(';')
-            else:
+            try:
+                if description:
+                    start_ID, message, role_name, end_ID = description.split(';')
+            except:
                 start_ID, message, role_name, end_ID = '', '', '', ''
             event_list.append(
                 {"summary": event['summary'], "start_timestamp": start_timestamp, "end_timestamp": end_timestamp,

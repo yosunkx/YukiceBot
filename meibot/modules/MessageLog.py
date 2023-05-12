@@ -1,11 +1,10 @@
 from collections import deque
 import random
 import string
-from modules import chatGPT, ConsoleLog
+from meibot.modules import ConsoleLog, chatGPT
 import os
 import json
 import asyncio
-import logging
 
 logger = ConsoleLog.set_logging('mylog.log')
 

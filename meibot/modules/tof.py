@@ -1,11 +1,9 @@
 import os
-import asyncio
 import datetime
 from discord.ext import commands
-from random import random
-from modules import CalendarModule, ConsoleLog
+from meibot.modules import CalendarModule
+from meibot.modules import ConsoleLog
 from dotenv import load_dotenv, set_key
-import logging
 
 logger = ConsoleLog.set_logging('mylog.log')
 

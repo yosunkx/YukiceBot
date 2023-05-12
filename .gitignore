@@ -364,9 +364,9 @@ FodyWeavers.xsd
 
 current/
 .idea/
-.env
-meibot-384017-177d6e3bc3bb.json
-memory/
+meibot/.env
+meibot/meibot-384017-177d6e3bc3bb.json
+meibot/memory/
 __pycache__/
 deploy.py
 MeiBot.sln

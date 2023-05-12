@@ -8,7 +8,6 @@ from modules import MessageLog, chatGPT, ConsoleLog
 import modules.CalendarModule as CalenderModule
 import signal
 import re
-import logging
 
 load_dotenv()
 DISCORD_API_KEY = os.getenv('DISCORD_BOT_TOKEN')
