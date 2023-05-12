@@ -2,8 +2,8 @@ import openai
 import os
 import asyncio
 from dotenv import load_dotenv
-from meibot.modules import gpt_persona
-from meibot.modules import ConsoleLog
+from . import gpt_persona
+from . import ConsoleLog
 
 logger = ConsoleLog.set_logging('mylog.log')
 

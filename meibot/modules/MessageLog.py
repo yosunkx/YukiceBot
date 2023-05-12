@@ -1,7 +1,7 @@
 from collections import deque
 import random
 import string
-from meibot.modules import ConsoleLog, chatGPT
+from . import ConsoleLog, chatGPT
 import os
 import json
 import asyncio

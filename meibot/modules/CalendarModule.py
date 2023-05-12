@@ -9,8 +9,7 @@ import discord
 from datetime import datetime as dt
 import datetime
 import os
-from meibot.modules import MessageLog
-from meibot.modules import tof, ConsoleLog, chatGPT
+from . import tof, ConsoleLog, chatGPT, MessageLog
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 

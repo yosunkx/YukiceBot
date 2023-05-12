@@ -9,8 +9,7 @@ from pytesseract import pytesseract
 from io import BytesIO
 from playwright.async_api import async_playwright
 import httpx
-from meibot.modules import CalendarModule
-from meibot.modules import ConsoleLog, chatGPT
+from . import ConsoleLog, chatGPT, CalendarModule
 
 load_dotenv('.env')
 APIFY_TOKEN = os.getenv('APIFY_API_KEY')

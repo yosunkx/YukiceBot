@@ -1,8 +1,7 @@
 import os
 import datetime
 from discord.ext import commands
-from meibot.modules import CalendarModule
-from meibot.modules import ConsoleLog
+from . import CalendarModule, ConsoleLog
 from dotenv import load_dotenv, set_key
 
 logger = ConsoleLog.set_logging('mylog.log')
