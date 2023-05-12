@@ -9,6 +9,7 @@ from pytesseract import pytesseract
 from io import BytesIO
 from playwright.async_api import async_playwright
 import httpx
+import platform
 from . import ConsoleLog, chatGPT, CalendarModule
 
 load_dotenv('.env')
@@ -16,7 +17,10 @@ APIFY_TOKEN = os.getenv('APIFY_API_KEY')
 
 logger = ConsoleLog.set_logging('mylog.log')
 
-path_to_tesseract = os.getenv('path_to_tesseract')
+if platform.system() == 'Windows':
+    path_to_tesseract = os.getenv('path_to_tesseract_windows')
+elif platform.system() == 'Linux':
+    path_to_tesseract = os.getenv('path_to_tesseract_docker')
 
 
 async def on_message(message):
@@ -31,7 +35,7 @@ async def process_message(message):
         tag = channel_name.split('-')[1]
         logger.info(f"converting news to text for: {tag}")
         news_text = await convert_to_text(message, tag)
-        logger.debug(news_text)
+        # print(news_text)
         summary_text = await news_text_to_summary(news_text)
         await news_summary_to_calendar(summary_text, tag)
 

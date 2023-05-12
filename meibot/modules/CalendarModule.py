@@ -51,23 +51,36 @@ async def events(ctx, end_date: str = None):
         end_time = None
     else:
         try:
-            end_date_obj = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
+            end_date_obj = dt.strptime(end_date, "%Y-%m-%d").date()
             end_time = end_date_obj.isoformat() + 'T23:59:59.999999Z'
         except ValueError:
             end_time = None
 
-    events = await get_events(end_time=end_time)
+    obtained_events = await get_events(end_time=end_time)
     if not events:
         await ctx.send('no upcomming events')
     else:
+        events_by_role = {}
+        current_timestamp = int(dt.now().timestamp())
+        for event in obtained_events:
+            role = event['role_name']
+            if role not in events_by_role:
+                events_by_role[role] = []
+            if event['start_timestamp'] < current_timestamp:
+                formatted_string = f"{event['summary']} ends <t:{event['end_timestamp']}:f>"
+            else:
+                formatted_string = f"{event['summary']} on <t:{event['start_timestamp']}:f>"
+            events_by_role[role].append(formatted_string)
+
+        # Format output
         formatted_strings = []
-        for event in events:
-            formatted_string = f"{event['summary']} on <t:{event['start_timestamp']}:f>"
-            formatted_strings.append(formatted_string)
+        for tag, event_list in events_by_role.items():
+            formatted_strings.append(f"**{tag}**: ")
+            formatted_strings.extend(event_list)
 
         output_string = '\n'.join(formatted_strings)
-        GPT_message = await chatGPT.GPT_prompt(None, "events")
-        await ctx.send(GPT_message + "\n" + output_string)
+        gpt_message = await chatGPT.GPT_prompt(None, "events")
+        await ctx.send(gpt_message + "\n" + output_string)
 
 
 @tasks.loop(minutes=1)

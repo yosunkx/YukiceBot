@@ -112,7 +112,7 @@ async def none_command(message_obj, message_text, logs):
     generated_message = await chatGPT.GPT_command(message_obj.content)
     gpt_message = message_obj.author.name + ": " + message_text
     ctx = await bot.get_context(message_obj)
-    logger.debug("Logs before passing to GPT_general: ", logs)
+    # print("Logs before passing to GPT_general: ", logs)
 
     if generated_message.strip().startswith("!"):
         logger.debug("gpt output starts with !")
@@ -138,7 +138,7 @@ async def none_command(message_obj, message_text, logs):
         await ctx.send(generated_none_command)
 
 
-""""@bot.command()
+@bot.command()
 async def time_out(ctx, member: discord.Member, timeout_duration=30, gpt_invoke=False):
     if not gpt_invoke and ctx.author.id != AUTHORIZED_USER_ID and ctx.author.id != ctx.bot.user.id:
         await ctx.send("You do not have permission to use this command.")
@@ -156,7 +156,7 @@ async def time_out(ctx, member: discord.Member, timeout_duration=30, gpt_invoke=
     await member.remove_roles(muted_role)
 
 
-async def gpt_time_out(bot_obj, mei_response_string, message_obj):
+"""async def gpt_time_out(bot_obj, mei_response_string, message_obj):
     prompt = [
         {"role": "system",
          "content": "You are now a robot that is only capable of outputting numbers. on a scale of 1 to 10 from not annoyed to very annoyed, how annoyed do you think is Mei? Answer your best guess and only respond with a number."},
@@ -181,7 +181,7 @@ async def print_log(ctx):
     logs = message_logs.get_messages(guild_id)['deque']
 
     # Print the message logs to the console
-    logger.info("Message logs for server:", guild_id)
+    logger.info(f"Message logs for server: {guild_id}")
     for message in logs:
         print(f"{message['role']}: {message['content']}")
 
