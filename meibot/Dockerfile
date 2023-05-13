@@ -1,27 +1,28 @@
-FROM python:3.8-slim
+FROM mcr.microsoft.com/playwright:focal
 
 WORKDIR /app
 ADD . /app
 
-# Install dependencies for Playwright
-RUN apt-get update && apt-get install -y wget gnupg2 ca-certificates \
-    && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list \
-    && apt-get update \
-    && apt-get install -y google-chrome-stable fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst fonts-freefont-ttf libxss1 \
-      --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/*
+# Install software-properties-common, and add deadsnakes PPA
+RUN apt-get update && apt-get install -y software-properties-common
+RUN add-apt-repository ppa:deadsnakes/ppa
+
+# Install python3.8 and pip3
+RUN apt-get update && apt-get install -y python3.8 python3-pip
 
 # Install Tesseract
-RUN apt-get update && apt-get install -y tesseract-ocr libtesseract-dev
+RUN apt-get install -y tesseract-ocr libtesseract-dev
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Update pip3 to pip corresponding to Python 3.8
+RUN python3.8 -m pip install --upgrade pip
+
+# Install your Python dependencies
+RUN python3.8 -m pip install --no-cache-dir -r requirements.txt
 
 # Use port 80
 EXPOSE 80
 
-CMD ["python", "MeiBotMain.py"]
+CMD ["python3.8", "MeiBotMain.py"]
 
 
 # Instructions to run:
