@@ -1,0 +1,3 @@
+RAID_DAY=
+FCH_DAY=
+VOID_DAY=

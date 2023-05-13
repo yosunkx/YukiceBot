@@ -1,11 +1,12 @@
-from .modules import embedding_transformer, wikipedia_scrape
+from .modules import embedding_transformer, wikipedia_url_handler
 
 
 async def user_handler(user_input):
     data_list = []
 
     if 'wiki' in user_input:
-        data = await wikipedia_scrape.scrape_wikipedia(user_input)
+        data = await wikipedia_url_handler.scrape_wikipedia(user_input)
+        print('embedding')
         for item in data:
             item_title = item['title']
             item_section = item['section']
@@ -20,5 +21,7 @@ async def user_handler(user_input):
                     'index': indexes[i]
                 }
                 data_list.append(data_dict)
+
+        print('finished embedding')
 
     return data_list

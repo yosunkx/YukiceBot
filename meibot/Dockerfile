@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/playwright:focal
+FROM mcr.microsoft.com/playwright:v1.32.1-focal
 
 WORKDIR /app
 ADD . /app
@@ -28,5 +28,5 @@ CMD ["python3.8", "MeiBotMain.py"]
 # Instructions to run:
 # 1. Navigate to meibot dir in console
 # 2. Build the image with: 'docker build -t meibot .'
-# 3. Create the volume with: 'docker volume create meibot-memory'
-# 4. Run the container with: 'docker run -m 2g -v meibot-memory:/app/memory meibot'
+# 3. If not created yet: Create the volume with: 'docker volume create meibot-data'
+# 4. Run the container with: 'docker run -m 2g -v meibot-data:/app/data meibot'

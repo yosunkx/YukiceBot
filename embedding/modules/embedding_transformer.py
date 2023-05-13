@@ -3,6 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 from transformers import AutoTokenizer, AutoModel
 import torch
 import uuid
+import random
 
 tokenizer = AutoTokenizer.from_pretrained("sentence-transformers/multi-qa-MiniLM-L6-cos-v1")
 model = AutoModel.from_pretrained("sentence-transformers/multi-qa-MiniLM-L6-cos-v1")
@@ -10,6 +11,10 @@ model = AutoModel.from_pretrained("sentence-transformers/multi-qa-MiniLM-L6-cos-
 
 def count_tokens(text):
     return len(tokenizer.encode(text, truncation=False))
+
+
+def generate_id():
+    return random.randint(0, 18446744073709551615)  # Range of a unsigned 64-bit integer
 
 
 # Split text into chunks
@@ -64,7 +69,7 @@ def encode(texts, title=None, section_name=None):
             embeddings = torch.nn.functional.normalize(embeddings, p=2, dim=1)
 
             # Generate a UUID for the text
-            text_id = str(uuid.uuid4())
+            text_id = generate_id()
 
             all_embeddings.append(embeddings)
             all_texts.append(text)

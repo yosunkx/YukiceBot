@@ -1,6 +1,7 @@
 import httpx
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
+import wordninja
 
 
 async def scrape_wikipedia(url):
@@ -12,9 +13,11 @@ async def scrape_wikipedia(url):
     # Get domain from the URL
     domain_parts = urlparse(url).netloc.split('.')
     if len(domain_parts) > 1:
-        domain = domain_parts[-2]
+        domain_str = domain_parts[-2]
     else:
-        domain = domain_parts[0]
+        domain_str = domain_parts[0]
+
+    domain = ' '.join(wordninja.split(domain_str))
 
     title = soup.find('h1', class_='firstHeading').text
     # Prepend domain to the title

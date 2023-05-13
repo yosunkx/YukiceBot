@@ -1,9 +1,9 @@
-from embedding.modules import wikipedia_scrape
+from embedding.modules import wikipedia_url_handler
 import asyncio
 
 
 async def main():
-    data = await wikipedia_scrape.scrape_wikipedia('http://wiki.heroesofhammerwatch.com/Paladin')
+    data = await wikipedia_url_handler.scrape_wikipedia('http://wiki.heroesofhammerwatch.com/Paladin')
     for item in data:
         print(f"Title: {item['title']}")
         print(f"Section: {item['section']}")

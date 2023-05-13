@@ -3,8 +3,10 @@ import asyncio
 from dotenv import load_dotenv
 import discord
 from discord.ext import commands
+from discord.ext import tasks
 import modules
 from modules import MessageLog, chatGPT, ConsoleLog
+from datetime import datetime
 import modules.CalendarModule as CalenderModule
 import signal
 import re
@@ -16,6 +18,7 @@ intents = discord.Intents.all()
 bot = commands.Bot(command_prefix=commands.when_mentioned_or('!', '<@!1097341747459272845>'), intents=intents)
 
 message_logs = MessageLog.MessageLogs()
+message_logs_for_embedding = MessageLog.EmbeddingMessageLogs()
 
 AUTHORIZED_USER_ID = 104055116897722368
 
@@ -31,6 +34,12 @@ async def on_ready():
     CalenderModule.check_events.start(bot)
 
 
+@tasks.loop(hours=5)
+async def periodic_save():
+    message_logs.save_logs()
+    message_logs_for_embedding.save_logs()
+
+
 @bot.event
 async def on_message(message_obj):
     # valid channel ids to store as memory
@@ -39,15 +48,21 @@ async def on_message(message_obj):
 
     if message_obj.channel.id in valid_channel_ids:
         async with message_logs.lock:
+            now = datetime.utcnow()
+            timestamp = now.strftime("%Y-%m-%d-%H:%M") + " UTC"
             if message_obj.author == bot.user:
                 logger.debug("Mei: " + processed_content)
                 await message_logs.append(message_obj.guild.id,
                                           {"role": "assistant", "content": "Mei: " + processed_content})
+                await message_logs_for_embedding.append(message_obj.guild.id,
+                                                        f"{timestamp} UTC Mei: {processed_content}")
                 return
             else:
                 logger.debug(message_obj.author.name + ": " + processed_content)
                 await message_logs.append(message_obj.guild.id, {"role": "user",
                                                                  "content": message_obj.author.name + ": " + processed_content})
+                await message_logs_for_embedding.append(message_obj.guild.id,
+                                                        f"{timestamp} UTC {message_obj.author.name}: {processed_content}")
     else:
         return
 
@@ -129,12 +144,12 @@ async def none_command(message_obj, message_text, logs):
         else:
             logger.debug("not valid command, output as normal message")
             generated_none_command = await chatGPT.GPT_mei(gpt_message, logs)
-            #await gpt_time_out(bot, generated_none_command, message_obj)
+            # await gpt_time_out(bot, generated_none_command, message_obj)
             await ctx.send(generated_none_command)
     else:
         logger.debug("normal message")
         generated_none_command = await chatGPT.GPT_mei(gpt_message, logs)
-        #await gpt_time_out(bot, generated_none_command, message_obj)
+        # await gpt_time_out(bot, generated_none_command, message_obj)
         await ctx.send(generated_none_command)
 
 
@@ -256,6 +271,7 @@ async def close_bot(ctx):
         return
 
     message_logs.save_logs()
+    message_logs_for_embedding.save_logs()
 
     # Send a message to notify that the bot will be closed
     await ctx.send("The bot will now close.")
