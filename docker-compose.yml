@@ -1,0 +1,17 @@
+version: '3.9'
+services:
+  meibot:
+    build:
+      context: ./meibot
+      dockerfile: Dockerfile
+    volumes:
+      - meibot-data:/app/data
+    mem_limit: 1g
+
+volumes:
+  meibot-data:
+
+# Instructions to run:
+# 1. Navigate to the "Yukicebot" directory in the console
+# 2. Build the images and start the containers with: 'docker-compose up'
+# 3. If the volumes are not created yet, they will be created automatically
