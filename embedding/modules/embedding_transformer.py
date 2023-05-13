@@ -2,6 +2,7 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from transformers import AutoTokenizer, AutoModel
 import torch
+import uuid
 
 tokenizer = AutoTokenizer.from_pretrained("sentence-transformers/multi-qa-MiniLM-L6-cos-v1")
 model = AutoModel.from_pretrained("sentence-transformers/multi-qa-MiniLM-L6-cos-v1")
@@ -13,7 +14,7 @@ def count_tokens(text):
 
 # Split text into chunks
 def split_text(text, max_length=460):
-    overlap = int(max_length/4)
+    overlap = int(max_length / 4)
     tokens = tokenizer.tokenize(text)
     chunks = []
     start = 0
@@ -46,9 +47,10 @@ def encode(texts, title=None, section_name=None):
     texts = tag_split_text(title, section_name, texts)
 
     all_embeddings = []
+    all_texts = []
+    all_indexes = []
     for text in texts:
         try:
-            # Tokenize sentences
             encoded_input = tokenizer(text, padding=True, truncation=True, return_tensors='pt')
 
             # Compute token embeddings
@@ -60,7 +62,13 @@ def encode(texts, title=None, section_name=None):
 
             # Normalize embeddings
             embeddings = torch.nn.functional.normalize(embeddings, p=2, dim=1)
+
+            # Generate a UUID for the text
+            text_id = str(uuid.uuid4())
+
             all_embeddings.append(embeddings)
+            all_texts.append(text)
+            all_indexes.append(text_id)
 
         except RuntimeError as e:
             if "Token indices sequence length is longer than the specified maximum sequence length" in str(e):
@@ -68,13 +76,19 @@ def encode(texts, title=None, section_name=None):
                 halfway = len(text) // 2
                 first_half = text[:halfway]
                 second_half = text[halfway:]
-                all_embeddings.extend(encode([first_half], title, section_name))
-                all_embeddings.extend(encode([second_half], title, section_name))
+                embeddings1, texts1, indexes1 = encode([first_half], title, section_name)
+                embeddings2, texts2, indexes2 = encode([second_half], title, section_name)
+                all_embeddings.extend(embeddings1)
+                all_texts.extend(texts1)
+                all_indexes.extend(indexes1)
+                all_embeddings.extend(embeddings2)
+                all_texts.extend(texts2)
+                all_indexes.extend(indexes2)
             else:
                 # If the error is not due to sequence length, raise it
                 raise e
 
-    return torch.cat(all_embeddings)
+    return torch.cat(all_embeddings), all_texts, all_indexes
 
 
 # Executor for running blocking tasks
