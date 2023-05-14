@@ -1,6 +1,7 @@
 version: '3.5'
 services:
   meibot:
+    container_name: meibot
     build:
       context: ./meibot
       dockerfile: Dockerfile
