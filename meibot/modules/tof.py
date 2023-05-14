@@ -6,6 +6,7 @@ from . import CalendarModule, ConsoleLog
 logger = ConsoleLog.set_logging('mylog.log')
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data')
+print(DATA_DIR)
 DATA_FILE = 'tof_config.txt'
 
 
@@ -62,15 +63,15 @@ async def add_tof_daily():
 
     if day_of_week == raid_day:
         description += '>raid'
-        add_key_to_config(config, 'RAID_DAY', '')
+        add_key_to_config(config, 'RAID_DAY', '1')
 
     if day_of_week == void_day:
         description += '>void'
-        add_key_to_config(config, 'VOID_DAY', '')
+        add_key_to_config(config, 'VOID_DAY', '5')
 
     if day_of_week == fch_day:
         description += '>fch'
-        add_key_to_config(config, 'FCH_DAY', '')
+        add_key_to_config(config, 'FCH_DAY', '6')
 
     save_config(config)
 
