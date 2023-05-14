@@ -5,7 +5,7 @@ from . import CalendarModule, ConsoleLog
 
 logger = ConsoleLog.set_logging('mylog.log')
 
-DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
+DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data')
 DATA_FILE = 'tof_config.txt'
 
 
