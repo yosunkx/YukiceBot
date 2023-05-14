@@ -9,6 +9,14 @@ services:
       - meibot-data:/app/data
     mem_limit: 1g
 
+#  sqlite:
+#    container_name: sqlite
+#    build: ./SQLite
+#    volumes:
+#      - db-data:/var/lib/sqlite
+#    command: ["python", "your_script.py"]
+
+
   etcd:
     container_name: milvus-etcd
     image: quay.io/coreos/etcd:v3.5.5
@@ -58,6 +66,7 @@ networks:
 
 volumes:
   meibot-data:
+  #db-data:
 
 # Instructions to run:
 # 1. Navigate to the "Yukicebot" directory in the console
