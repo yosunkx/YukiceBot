@@ -49,9 +49,9 @@ def setup(bot):
 
 async def add_tof_daily():
     config = load_config()
-    raid_day = int(config.get('RAID_DAY', '1'))
-    void_day = int(config.get('VOID_DAY', '5'))
-    fch_day = int(config.get('FCH_DAY', '6'))
+    raid_day = int(config.get('RAID_DAY', '1') or '1')
+    void_day = int(config.get('VOID_DAY', '5') or '5')
+    fch_day = int(config.get('FCH_DAY', '6') or '6')
     description = 'check old man otherwise JJ'
     now = datetime.datetime.utcnow() + datetime.timedelta(hours=1)
     start_time = now.replace(hour=3, minute=30, second=0, microsecond=0)

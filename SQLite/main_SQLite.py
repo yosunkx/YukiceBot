@@ -1,8 +1,14 @@
 from fastapi import FastAPI
 import asyncio
 import aiosqlite
+from pydantic import BaseModel
 
 app = FastAPI()
+
+
+class Item(BaseModel):
+    int_id: int
+    text_chunk: str
 
 
 async def init_db():
@@ -55,8 +61,8 @@ async def startup_event():
 
 
 @app.post("/store")
-async def store(int_id: int, text_chunk: str):
-    await store_to_db(int_id, text_chunk)
+async def store(item: Item):
+    await store_to_db(item.int_id, item.text_chunk)
     return {"message": "Data stored successfully"}
 
 

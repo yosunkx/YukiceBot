@@ -16,6 +16,13 @@ services:
 #      - db-data:/var/lib/sqlite
 #    command: ["python", "your_script.py"]
 
+#  sqlite:
+#    container_name: embedding_service
+#    build: ./embedding
+#    volumes:
+#       - embedding-data:/var/lib/sqlite
+#    command: ["python", "your_script.py"]
+
 
   etcd:
     container_name: milvus-etcd
@@ -67,6 +74,7 @@ networks:
 volumes:
   meibot-data:
   #db-data:
+  #embedding-data
 
 # Instructions to run:
 # 1. Navigate to the "Yukicebot" directory in the console
