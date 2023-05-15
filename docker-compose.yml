@@ -12,6 +12,8 @@ services:
   sqlite:
     container_name: sqlite
     build: ./SQLite
+    ports:
+      - 8080:8080
     volumes:
       - db-data:/var/lib/sqlite
 
