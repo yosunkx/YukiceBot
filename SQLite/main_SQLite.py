@@ -80,3 +80,15 @@ async def delete(int_id: int):
     await delete_from_db(int_id)
     return {"message": "Data deleted successfully"}
 
+
+@app.get("/healthcheck")
+async def healthcheck():
+    try:
+        async with aiosqlite.connect('/var/lib/sqlite/my_database.db') as db:
+            cursor = await db.execute("SELECT 1")
+            await cursor.fetchone()
+        return {"status": "ok"}
+    except Exception as e:
+        print(f"An error occurred during health check: {e}")
+        return {"status": "error"}, 500
+
