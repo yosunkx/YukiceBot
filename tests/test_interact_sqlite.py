@@ -7,8 +7,9 @@ server_ip = '192.168.0.110'  # IP of your server
 current_ip = socket.gethostbyname(socket.gethostname())
 
 # If the current machine IP is the same as the server IP, set host to 'localhost'. Otherwise, set it to the server IP.
-host = 'localhost' if current_ip == server_ip else server_ip
-port = '8000'
+#host = 'localhost' if current_ip == server_ip else server_ip
+port = '8080'
+host = '192.168.0.110'
 
 base_url = f"http://{host}:{port}"
 
