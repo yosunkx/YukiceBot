@@ -2,13 +2,16 @@ import requests
 import socket
 
 server_ip = '192.168.0.110'  # IP of your server
+port = '8080'
 
 # Get the IP address of the current machine
 current_ip = socket.gethostbyname(socket.gethostname())
 
 # If the current machine IP is the same as the server IP, set host to 'localhost'. Otherwise, set it to the server IP.
-host = 'localhost' if current_ip == server_ip else server_ip
-port = '8080'
+if current_ip == server_ip:
+    host = 'localhost'
+else:
+    host = server_ip
 
 base_url = f"http://{host}:{port}"
 
