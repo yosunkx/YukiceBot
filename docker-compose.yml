@@ -9,14 +9,13 @@ services:
       - meibot-data:/app/data
     mem_limit: 1g
 
-#  sqlite:
-#    container_name: sqlite
-#    build: ./SQLite
-#    volumes:
-#      - db-data:/var/lib/sqlite
-#    command: ["python", "your_script.py"]
+  sqlite:
+    container_name: sqlite
+    build: ./SQLite
+    volumes:
+      - db-data:/var/lib/sqlite
 
-#  sqlite:
+#  embedding:
 #    container_name: embedding_service
 #    build: ./embedding
 #    volumes:
@@ -73,7 +72,7 @@ networks:
 
 volumes:
   meibot-data:
-  #db-data:
+  db-data:
   #embedding-data
 
 # Instructions to run:
