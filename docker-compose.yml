@@ -15,15 +15,22 @@ services:
     ports:
       - 8080:8080
     volumes:
-      - db-data:/var/lib/sqlite
+      - db-data:/app/data
 
-#  embedding:
-#    container_name: embedding_service
-#    build: ./embedding
-#    volumes:
-#       - embedding-data:/var/lib/sqlite
-#    command: ["python", "your_script.py"]
-
+  embedding:
+    container_name: embedding_service
+    build: ./embedding
+    ports:
+      - 8000:8000
+    volumes:
+       - embedding-data:/var/lib/sqlite
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            count: 1
+            capabilities: [gpu]
 
   etcd:
     container_name: milvus-etcd
@@ -75,7 +82,7 @@ networks:
 volumes:
   meibot-data:
   db-data:
-  #embedding-data
+  embedding-data:
 
 # Instructions to run:
 # 1. Navigate to the "Yukicebot" directory in the console
