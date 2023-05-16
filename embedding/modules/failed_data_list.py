@@ -19,7 +19,7 @@ class FailedDataList:
         assert key in self._data, f"Invalid key: {key}. Valid keys are {list(self._data.keys())}"
         return self._data[key]
 
-    def remove_failed_data(self, key, index):
+    async def remove_failed_data(self, key, index):
         assert key in self._data, f"Invalid key: {key}. Valid keys are {list(self._data.keys())}"
         del self._data[key][index]
         self.save_logs()
@@ -43,6 +43,9 @@ class FailedDataList:
                 with open(f'data/{filename}', 'r', encoding='utf-8') as f:
                     self._data[key] = json.load(f)
                     print(f"loaded failed logs: {key}")
+
+    def is_empty(self):
+        return not any(self._data.values())
 
     def __repr__(self):
         return str(self._data)
