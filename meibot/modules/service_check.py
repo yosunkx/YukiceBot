@@ -18,10 +18,13 @@ async def check_milvus_status():
             host=host,  # replace with your host
             port=milvus_port  # replace with your port
         )
-        status = utility.get_info()
-        return status
+        status = 'Online'
+    except Exception as e:
+        status = f"Failed to connect to Milvus server at {host}:{port}\nError: {e}"
     finally:
         connections.disconnect("default")
+
+    return status
 
 
 async def check_sqlite_status():
