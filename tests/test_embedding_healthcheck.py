@@ -10,7 +10,7 @@ current_ip = socket.gethostbyname(socket.gethostname())
 host = 'localhost'
 
 
-base_url = f"http://{host}:{port}"
+base_url = f"http://{server_ip}:{port}"
 
 try:
     response = requests.get(f"{base_url}/healthcheck")
