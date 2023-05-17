@@ -44,6 +44,11 @@ class FailedDataList:
                     self._data[key] = json.load(f)
                     print(f"loaded failed logs: {key}")
 
+    async def clear(self):
+        async with self.lock:
+            self._data = {"SQL": [], "Milvus": []}
+            self.save_logs()
+
     def is_empty(self):
         return not any(self._data.values())
 

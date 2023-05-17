@@ -22,11 +22,12 @@ host = 'localhost' if current_ip == server_ip else server_ip
 milvus_port = '19530'
 
 
-async def send_to_sql(data_dict):
+async def send_to_sql(data_list):
     async with httpx.AsyncClient() as client:
-        response = await client.post("http://sqlite:8080/store", json=data_dict)
-        response.raise_for_status()  # Raises an HTTPError if the status is 4xx, 5xx
-        print(f"Response: {response.json()}")  # log the response
+        for data_dict in data_list:
+            response = await client.post("http://sqlite:8080/store", json=data_dict)
+            response.raise_for_status()  # Raises an HTTPError if the status is 4xx, 5xx
+            print(f"Response: {response.json()}")  # log the response
 
 
 async def send_to_milvus(data_list):
@@ -63,6 +64,8 @@ async def send_to_milvus(data_list):
 
 async def retry_failed_requests():
     global retry_task
+    sleep_timer = 20
+    max_sleep_timer = 7200  # 2 hours
     while failed_data_list:
         for key in ["SQL", "Milvus"]:
             if failed_data_list.get_failed_data(key):
@@ -73,9 +76,12 @@ async def retry_failed_requests():
                         elif key == "Milvus":
                             await send_to_milvus(data_dict)
                         await failed_data_list.remove_failed_data(key, i)
+                        sleep_timer = 20  # Reset the timer after a successful request
                     except httpx.HTTPError as exc:
                         print(f"Request failed: {exc}")
-                        await asyncio.sleep(20)
+                        await asyncio.sleep(sleep_timer)
+                        if sleep_timer < max_sleep_timer:  # doubles sleep timer on fail
+                            sleep_timer = min(2 * sleep_timer, max_sleep_timer)
                         break  # Stop the current loop and wait for the next iteration
         await asyncio.sleep(20)  # Wait 20 seconds before retrying
     retry_task = None  # Reset the task when done
@@ -131,12 +137,11 @@ async def prepare_data(user_input):
 
 async def send_to_databases(data_list_sql, data_list_milvus):
     global retry_task
-    for data_dict in data_list_sql:
-        try:
-            await send_to_sql(data_dict)
-        except httpx.HTTPError as exc:
-            print(f"Request failed: {exc}")
-            await failed_data_list.append('SQL', data_dict)
+    try:
+        await send_to_sql(data_list_sql)
+    except Exception as exc:  # Catch general exceptions, not just httpx.HTTPError
+        print(f"Request failed: {exc}")
+        await failed_data_list.append('SQL', data_list_milvus)
 
     try:
         await send_to_milvus(data_list_milvus)
@@ -146,6 +151,12 @@ async def send_to_databases(data_list_sql, data_list_milvus):
 
     if failed_data_list and not retry_task:
         retry_task = asyncio.create_task(retry_failed_requests())
+
+
+@app.post("/clear_failed_tasks")
+async def clear_failed_tasks():
+    await failed_data_list.clear()
+    return {"status": "Failed tasks cleared"}
 
 
 @app.get("/healthcheck")
