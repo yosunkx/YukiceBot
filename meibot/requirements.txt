@@ -10,3 +10,4 @@ protobuf==4.23.0
 pytesseract==0.3.10
 python-dotenv==1.0.0
 scikit_learn==1.2.2
+pymilvus==2.2.8
