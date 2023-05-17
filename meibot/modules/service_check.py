@@ -8,8 +8,14 @@ server_ip = '192.168.0.110'
 milvus_port = '19530'
 embedding_port = '8000'
 SQLite_port = '8080'
-host = 'localhost'
+local_host = 'localhost'
 mei_version = '0.1.0'
+current_ip = socket.gethostbyname(socket.gethostname())
+if current_ip == server_ip:
+    host = local_host
+else:
+    host = server_ip
+
 
 
 async def check_milvus_status():
@@ -57,7 +63,6 @@ async def service_check(ctx):
     milvus_status = await check_milvus_status()
     sqlite_status = await check_sqlite_status()
     embedding_status = await check_embedding_status()
-    current_ip = socket.gethostbyname(socket.gethostname())
 
     all_status = f"Milvus status: {milvus_status}\nSQLite status: {sqlite_status}\nEmbedding service status: {embedding_status}\nCurrent ip: {current_ip}"
     await ctx.send(all_status)
