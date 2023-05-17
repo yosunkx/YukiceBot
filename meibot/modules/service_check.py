@@ -20,7 +20,7 @@ async def check_milvus_status():
         )
         status = 'Online'
     except Exception as e:
-        status = f"Failed to connect to Milvus server at {host}:{port}\nError: {e}"
+        status = f"Failed to connect to Milvus server at {host}:{milvus_port}\nError: {e}"
     finally:
         connections.disconnect("default")
 
