@@ -5,6 +5,11 @@ services:
     build:
       context: ./meibot
       dockerfile: Dockerfile
+    environment:
+      - DOCKER=True
+      - MILVUS_HOST=standalone
+      - EMBEDDING_HOST=embedding
+      - SQLITE_HOST=sqlite
     volumes:
       - meibot-data:/app/data
     mem_limit: 1g
