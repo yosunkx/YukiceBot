@@ -53,8 +53,9 @@ async def service_check(ctx):
     milvus_status = await check_milvus_status()
     sqlite_status = await check_sqlite_status()
     embedding_status = await check_embedding_status()
+    current_ip = socket.gethostbyname(socket.gethostname())
 
-    all_status = f"Milvus status: {milvus_status}\nSQLite status: {sqlite_status}\nEmbedding service status: {embedding_status}"
+    all_status = f"Milvus status: {milvus_status}\nSQLite status: {sqlite_status}\nEmbedding service status: {embedding_status}\nCurrent ip: {current_ip}"
     await ctx.send(all_status)
 
 
