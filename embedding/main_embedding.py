@@ -1,6 +1,6 @@
 import asyncio
-from .modules import embedding_transformer, wikipedia_url_handler
-from .modules import failed_data_list as fdl
+from modules import embedding_transformer, wikipedia_url_handler
+from modules import failed_data_list as fdl
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from pymilvus import connections, exceptions, Collection
