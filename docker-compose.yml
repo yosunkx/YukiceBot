@@ -18,7 +18,7 @@ services:
       - db-data:/app/data
 
   embedding:
-    container_name: embedding_service
+    container_name: embedding-service
     build: ./embedding
     ports:
       - 8000:8000
