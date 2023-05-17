@@ -25,7 +25,7 @@ async def check_milvus_status():
     try:
         connections.connect(
             alias="default",
-            host=host,  # replace with your host
+            host=milvus_host,  # replace with your host
             port=milvus_port  # replace with your port
         )
         status = 'Online'
