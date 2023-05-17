@@ -9,12 +9,10 @@ milvus_port = '19530'
 embedding_port = '8000'
 SQLite_port = '8080'
 local_host = 'localhost'
-mei_version = '0.1.0'
+mei_version = '0.1.1'
 current_ip = socket.gethostbyname(socket.gethostname())
-if current_ip == server_ip:
-    host = local_host
-else:
-    host = server_ip
+
+host = local_host
 
 
 
