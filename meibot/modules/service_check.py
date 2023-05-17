@@ -9,6 +9,7 @@ milvus_port = '19530'
 embedding_port = '8000'
 SQLite_port = '8080'
 host = 'localhost'
+mei_version = '0.1.0'
 
 
 async def check_milvus_status():
@@ -62,5 +63,11 @@ async def service_check(ctx):
     await ctx.send(all_status)
 
 
+@commands.command()
+async def mei_ver(ctx):
+    await ctx.send(mei_version)
+
+
 def setup(bot):
     bot.add_command(service_check)
+    bot.add_command(mei_ver)
