@@ -12,7 +12,7 @@ current_ip = socket.gethostbyname(socket.gethostname())
 # Get value of environment variable 'DOCKER'. If it doesn't exist, default to False.
 docker = os.getenv('DOCKER', False)
 
-embedding_host = os.getenv('EMBEDDING_HOST', server_ip if current_ip == server_ip else local_host)
+embedding_host = os.getenv('EMBEDDING_HOST', server_ip if current_ip != server_ip else local_host)
 
 
 @commands.command()
