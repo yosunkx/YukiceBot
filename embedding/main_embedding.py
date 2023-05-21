@@ -108,9 +108,9 @@ async def startup_event():
 
 
 @app.post("/process")
-async def process_data(user_input: str):
+async def process_data(user_input: UserInput):
     try:
-        data_list_sql, data_list_milvus, milvus_partition = await prepare_data(user_input)
+        data_list_sql, data_list_milvus, milvus_partition = await prepare_data(user_input.user_input)
     except ValidationError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid input format")
 
