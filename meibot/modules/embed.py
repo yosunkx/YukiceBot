@@ -33,7 +33,7 @@ async def embed(ctx, embed_request: str = None):
     except Exception as exc:
         status = {"status": f"An unexpected error occurred: {exc}"}
 
-    await ctx.send(status["status"])
+    await ctx.send(status["status"] + f"\nhost: {embedding_host}:{embedding_port}")
 
 
 def setup(bot):

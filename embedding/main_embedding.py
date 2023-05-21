@@ -6,8 +6,21 @@ from pydantic import BaseModel, ValidationError
 from pymilvus import connections, exceptions, Collection
 import httpx
 import socket
+import os
 
-server_ip = '192.168.0.133'  # IP of your server
+server_ip = '192.168.0.133'
+local_host = 'localhost'
+milvus_port = '19530'
+embedding_port = '8000'
+SQLite_port = '8080'
+current_ip = socket.gethostbyname(socket.gethostname())
+
+# Get value of environment variable 'DOCKER'. If it doesn't exist, default to False.
+docker = os.getenv('DOCKER', False)
+
+milvus_host = os.getenv('MILVUS_HOST', server_ip if current_ip != server_ip else local_host)
+embedding_host = os.getenv('EMBEDDING_HOST', server_ip if current_ip != server_ip else local_host)
+SQLite_host = os.getenv('SQLITE_HOST', server_ip if current_ip != server_ip else local_host)
 
 
 class UserInput(BaseModel):
@@ -17,9 +30,6 @@ class UserInput(BaseModel):
 app = FastAPI()
 failed_data_list = fdl.FailedDataList()
 retry_task = None
-current_ip = socket.gethostbyname(socket.gethostname())
-host = 'localhost' if current_ip == server_ip else server_ip
-milvus_port = '19530'
 
 partition_1_name = "message_log"
 partition_2_name = "documents"
@@ -28,7 +38,7 @@ partition_2_name = "documents"
 async def send_to_sql(data_list):
     async with httpx.AsyncClient() as client:
         for data_dict in data_list:
-            response = await client.post("http://sqlite:8080/store", json=data_dict)
+            response = await client.post(f"http://{SQLite_host}:{SQLite_port}/store", json=data_dict)
             response.raise_for_status()  # Raises an HTTPError if the status is 4xx, 5xx
             print(f"Response: {response.json()}")  # log the response
 
@@ -37,10 +47,10 @@ async def send_to_milvus(data_list, milvus_partition):
     try:
         connections.connect(
             alias="default",
-            host=host,
+            host=milvus_host,
             port=milvus_port
         )
-        print(f"Connected to Milvus server at {host}:{milvus_port} with alias 'default'")
+        print(f"Connected to Milvus server at {milvus_host}:{milvus_port} with alias 'default'")
         try:
             collection_name = "sentence_transformer_collection"
             collection = Collection(collection_name)
@@ -53,7 +63,7 @@ async def send_to_milvus(data_list, milvus_partition):
             raise e
 
     except Exception as e:
-        print(f"Failed to connect to Milvus server at {host}:{milvus_port}")
+        print(f"Failed to connect to Milvus server at {milvus_host}:{milvus_port}")
         print(f"Error: {e}")
 
     finally:
