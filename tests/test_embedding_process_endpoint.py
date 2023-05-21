@@ -14,3 +14,5 @@ if response.status_code == 200:
 else:
     print(f"Request failed with status code {response.status_code}")
     print(response.text)
+
+response = requests.post("http://192.168.0.133:8000/clear_failed_tasks")
