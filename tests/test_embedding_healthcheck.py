@@ -1,7 +1,7 @@
 import requests
 import socket
 
-server_ip = '192.168.0.110'  # IP of your server
+server_ip = '192.168.0.133'  # IP of your server
 port = '8000'
 # Get the IP address of the current machine
 current_ip = socket.gethostbyname(socket.gethostname())

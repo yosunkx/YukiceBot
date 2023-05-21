@@ -3,7 +3,7 @@ import socket
 from pymilvus import connections, exceptions, CollectionSchema, FieldSchema, DataType, Collection, utility
 
 alias = "default"
-server_ip = '192.168.0.110'  # IP of your server
+server_ip = '192.168.0.133'  # IP of your server
 
 # Get the IP address of the current machine
 current_ip = socket.gethostbyname(socket.gethostname())

@@ -5,7 +5,7 @@ import httpx
 import os
 import socket
 
-server_ip = '192.168.0.110'
+server_ip = '192.168.0.133'
 local_host = 'localhost'
 milvus_port = '19530'
 embedding_port = '8000'

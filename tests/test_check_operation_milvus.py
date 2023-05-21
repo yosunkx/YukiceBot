@@ -4,7 +4,7 @@ from pymilvus import connections, exceptions, CollectionSchema, FieldSchema, Dat
 import numpy as np
 
 alias = "default"
-server_ip = '192.168.0.110'  # IP of your server
+server_ip = '192.168.0.133'  # IP of your server
 
 # Get the IP address of the current machine
 current_ip = socket.gethostbyname(socket.gethostname())

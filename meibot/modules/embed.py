@@ -4,7 +4,7 @@ import httpx
 import os
 import socket
 
-server_ip = '192.168.0.110'
+server_ip = '192.168.0.133'
 local_host = 'localhost'
 embedding_port = '8000'
 current_ip = socket.gethostbyname(socket.gethostname())

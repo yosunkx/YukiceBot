@@ -7,7 +7,7 @@ from pymilvus import connections, exceptions, Collection
 import httpx
 import socket
 
-server_ip = '192.168.0.110'  # IP of your server
+server_ip = '192.168.0.133'  # IP of your server
 
 
 class UserInput(BaseModel):

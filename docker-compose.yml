@@ -10,6 +10,7 @@ services:
       - MILVUS_HOST=standalone
       - EMBEDDING_HOST=embedding
       - SQLITE_HOST=sqlite
+      - server_ip=192.168.0.133
     volumes:
       - meibot-data:/app/data
     mem_limit: 1g
@@ -29,6 +30,8 @@ services:
       - 8000:8000
     volumes:
        - embedding-data:/var/lib/sqlite
+    environment:
+      - server_ip=192.168.0.133
     deploy:
       resources:
         reservations:
