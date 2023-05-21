@@ -44,6 +44,7 @@ async def periodic_save():
 async def on_message(message_obj):
     # valid channel ids to store as memory
     valid_channel_ids = {370007994831863810, 1102494872356786227, 1097616064407408651}
+    message_log_channel_ids = {370007994831863810, 1102494872356786227}
     processed_content = await process_message_content(message_obj)
 
     if message_obj.channel.id in valid_channel_ids:
@@ -52,17 +53,15 @@ async def on_message(message_obj):
             timestamp = now.strftime("%Y-%m-%d-%H:%M") + " UTC"
             if message_obj.author == bot.user:
                 logger.debug("Mei: " + processed_content)
-                await message_logs.append(message_obj.guild.id,
-                                          {"role": "assistant", "content": "Mei: " + processed_content})
-                await message_logs_for_embedding.append(message_obj.guild.id,
-                                                        f"{timestamp} UTC Mei: {processed_content}")
+                if message_obj.channel.id in message_log_channel_ids:
+                    await message_logs.append(message_obj.guild.id, {"role": "assistant", "content": "Mei: " + processed_content})
+                    await message_logs_for_embedding.append(message_obj.guild.id, f"{timestamp} UTC Mei: {processed_content}")
                 return
             else:
                 logger.debug(message_obj.author.name + ": " + processed_content)
-                await message_logs.append(message_obj.guild.id, {"role": "user",
-                                                                 "content": message_obj.author.name + ": " + processed_content})
-                await message_logs_for_embedding.append(message_obj.guild.id,
-                                                        f"{timestamp} UTC {message_obj.author.name}: {processed_content}")
+                if message_obj.channel.id in message_log_channel_ids:
+                    await message_logs.append(message_obj.guild.id, {"role": "user", "content": message_obj.author.name + ": " + processed_content})
+                    await message_logs_for_embedding.append(message_obj.guild.id, f"{timestamp} UTC {message_obj.author.name}: {processed_content}")
     else:
         return
 
