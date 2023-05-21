@@ -55,6 +55,17 @@ async def delete_from_db(int_id: int):
         print(f"An error occurred while deleting data: {e}")
 
 
+async def check_storage():
+    try:
+        async with aiosqlite.connect('/var/lib/sqlite/my_database.db') as db:
+            cursor = await db.execute("SELECT COUNT(*) FROM my_table")
+            row_count = await cursor.fetchone()
+        return row_count[0]
+    except Exception as e:
+        print(f"An error occurred while retrieving storage: {e}")
+        return None
+
+
 @app.on_event("startup")
 async def startup_event():
     await init_db()
@@ -87,8 +98,8 @@ async def healthcheck():
         async with aiosqlite.connect('/var/lib/sqlite/my_database.db') as db:
             cursor = await db.execute("SELECT 1")
             await cursor.fetchone()
-        return {"status": "ok"}
+            storage = await check_storage()
+        return {"status": "ok", "storage": storage}
     except Exception as e:
         print(f"An error occurred during health check: {e}")
         return {"status": "error"}, 500
-

@@ -1,6 +1,6 @@
 from discord.ext import commands
 import discord
-from pymilvus import connections, utility
+from pymilvus import connections, utility, Collection
 import httpx
 import os
 import socket
@@ -10,15 +10,15 @@ local_host = 'localhost'
 milvus_port = '19530'
 embedding_port = '8000'
 SQLite_port = '8080'
-mei_version = '0.1.2'
+mei_version = '0.1.5'
 current_ip = socket.gethostbyname(socket.gethostname())
 
 # Get value of environment variable 'DOCKER'. If it doesn't exist, default to False.
 docker = os.getenv('DOCKER', False)
 
-milvus_host = os.getenv('MILVUS_HOST', server_ip if current_ip == server_ip else local_host)
-embedding_host = os.getenv('EMBEDDING_HOST', server_ip if current_ip == server_ip else local_host)
-SQLite_host = os.getenv('SQLITE_HOST', server_ip if current_ip == server_ip else local_host)
+milvus_host = os.getenv('MILVUS_HOST', server_ip if current_ip != server_ip else local_host)
+embedding_host = os.getenv('EMBEDDING_HOST', server_ip if current_ip != server_ip else local_host)
+SQLite_host = os.getenv('SQLITE_HOST', server_ip if current_ip != server_ip else local_host)
 
 
 async def check_milvus_status():
@@ -28,7 +28,12 @@ async def check_milvus_status():
             host=milvus_host,  # replace with your host
             port=milvus_port  # replace with your port
         )
-        status = 'Online'
+        collection = Collection("sentence_transformer_collection")
+        partition = collection.partition("message_log")
+        num_entities_partition_1 = partition.num_entities
+        partition = collection.partition("documents")
+        num_entities_partition_2 = partition.num_entities
+        status = f"Online; message_log: {num_entities_partition_1}; documents: {num_entities_partition_2}"
     except Exception as e:
         status = f"Failed to connect to Milvus server at {milvus_host}:{milvus_port}\nError: {e}"
     finally:
@@ -68,7 +73,7 @@ async def service_check(ctx):
     embedding_status = await check_embedding_status()
 
     all_status = f"Milvus status: {milvus_status}\nSQLite status: {sqlite_status}\nEmbedding service status: " \
-                 f"{embedding_status}\nCurrent ip: {current_ip}"
+                 f"{embedding_status}\nCurrent ip: {current_ip}\nMilvus Host: {milvus_host}"
     await ctx.send(all_status)
 
 

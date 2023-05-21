@@ -1,8 +1,8 @@
 import asyncio
 from modules import embedding_transformer, wikipedia_url_handler
 from modules import failed_data_list as fdl
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException, status
+from pydantic import BaseModel, ValidationError
 from pymilvus import connections, exceptions, Collection
 import httpx
 import socket
@@ -21,6 +21,9 @@ current_ip = socket.gethostbyname(socket.gethostname())
 host = 'localhost' if current_ip == server_ip else server_ip
 milvus_port = '19530'
 
+partition_1_name = "message_log"
+partition_2_name = "documents"
+
 
 async def send_to_sql(data_list):
     async with httpx.AsyncClient() as client:
@@ -30,7 +33,7 @@ async def send_to_sql(data_list):
             print(f"Response: {response.json()}")  # log the response
 
 
-async def send_to_milvus(data_list):
+async def send_to_milvus(data_list, milvus_partition):
     try:
         connections.connect(
             alias="default",
@@ -42,7 +45,7 @@ async def send_to_milvus(data_list):
             collection_name = "sentence_transformer_collection"
             collection = Collection(collection_name)
             print(f"collection obtained: {collection_name}")
-            mr = collection.insert(data_list)
+            mr = collection.insert(data_list, milvus_partition)
             collection.flush()
             print("data inserted")
         except Exception as e:
@@ -95,22 +98,31 @@ async def startup_event():
 
 
 @app.post("/process")
-async def process_data(user_input):
-    data_list_sql, data_list_milvus = await prepare_data(user_input)
+async def process_data(user_input: str):
+    try:
+        data_list_sql, data_list_milvus, milvus_partition = await prepare_data(user_input)
+    except ValidationError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid input format")
 
     if not data_list_sql:
-        print('invalid input format')
-        raise HTTPException(status_code=400, detail="Invalid input format")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid input format")
 
-    await send_to_databases(data_list_sql, data_list_milvus)
+    try:
+        await send_to_databases(data_list_sql, data_list_milvus, milvus_partition)
+    except Exception as exc:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Database error: {exc}")
+
+    return {"status": "success"}
 
 
 async def prepare_data(user_input):
     data_list_sql = []
     milvus_list_vector = []
     milvus_list_id = []
+    milvus_partition = ''
 
     if 'wiki' in user_input:
+        milvus_partition = partition_2_name
         data = await wikipedia_url_handler.scrape_wikipedia(user_input)
         print('embedding')
         for item in data:
@@ -132,10 +144,10 @@ async def prepare_data(user_input):
         data_list_milvus = [milvus_list_id, milvus_list_vector]
         print('finished embedding')
 
-    return data_list_sql, data_list_milvus
+    return data_list_sql, data_list_milvus, milvus_partition
 
 
-async def send_to_databases(data_list_sql, data_list_milvus):
+async def send_to_databases(data_list_sql, data_list_milvus, milvus_partition):
     global retry_task
     try:
         await send_to_sql(data_list_sql)
@@ -144,7 +156,7 @@ async def send_to_databases(data_list_sql, data_list_milvus):
         await failed_data_list.append('SQL', data_list_milvus)
 
     try:
-        await send_to_milvus(data_list_milvus)
+        await send_to_milvus(data_list_milvus, milvus_partition)
     except Exception as exc:  # Catch general exceptions, not just httpx.HTTPError
         print(f"Request failed: {exc}")
         await failed_data_list.append('Milvus', data_list_milvus)

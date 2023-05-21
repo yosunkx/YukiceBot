@@ -64,6 +64,18 @@ async def init_db():
                 using='default'  # This can be omitted if you only have one connection
             )
             print(f"Collection '{collection_name}' created")
+        partition_1_name = "message_log"
+        partition_2_name = "documents"
+        if collection.has_partition(partition_1_name):
+            print(f"partition already exists: {partition_1_name}")
+        else:
+            collection.create_partition(partition_1_name)
+            print(f"partition created: {partition_1_name}")
+        if collection.has_partition(partition_2_name):
+            print(f"partition already exists: {partition_2_name}")
+        else:
+            collection.create_partition(partition_2_name)
+            print(f"partition created: {partition_2_name}")
 
     except Exception as e:
         print(f"Failed to connect to Milvus server at {host}:{port}")
