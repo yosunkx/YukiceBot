@@ -10,7 +10,7 @@ local_host = 'localhost'
 milvus_port = '19530'
 embedding_port = '8000'
 SQLite_port = '8080'
-mei_version = '0.1.7'
+mei_version = '0.1.8'
 current_ip = socket.gethostbyname(socket.gethostname())
 
 # Get value of environment variable 'DOCKER'. If it doesn't exist, default to False.
