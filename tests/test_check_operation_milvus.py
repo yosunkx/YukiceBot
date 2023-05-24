@@ -43,7 +43,7 @@ try:
         print(f"failed to get collection: {collection_name}")
 
     try:
-        mr = collection.insert(data)
+        mr = collection.insert(data, "documents")
         collection.flush()
         print("data inserted")
     except Exception as e:

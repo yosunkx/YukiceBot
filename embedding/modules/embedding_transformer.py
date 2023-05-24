@@ -93,7 +93,7 @@ def encode(texts, title=None, section_name=None):
                 # If the error is not due to sequence length, raise it
                 raise e
 
-    return torch.cat(all_embeddings), all_texts, all_indexes
+    return torch.cat(all_embeddings).tolist(), all_texts, all_indexes
 
 
 # Executor for running blocking tasks
