@@ -73,7 +73,7 @@ async def service_check(ctx):
     embedding_status = await check_embedding_status()
 
     all_status = f"Milvus status: {milvus_status}\nSQLite status: {sqlite_status}\nEmbedding service status: " \
-                 f"{embedding_status}\nCurrent ip: {current_ip}\nMilvus Host: {milvus_host}"
+                 f"{embedding_status}\nMilvus Host: {milvus_host}"
     await ctx.send(all_status)
 
 
