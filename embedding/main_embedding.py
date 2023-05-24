@@ -144,7 +144,7 @@ async def prepare_data(user_input):
 
             for i in range(len(embeddings)):
                 data_dict_sql = {
-                    'index': indexes[i],
+                    'int_id': indexes[i],
                     'text_chunk': texts[i]
                 }
                 milvus_list_vector.append(embeddings[i])
