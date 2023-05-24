@@ -147,7 +147,7 @@ async def prepare_data(user_input):
                     'index': indexes[i],
                     'text_chunk': texts[i]
                 }
-                milvus_list_vector.append(embeddings[i])
+                milvus_list_vector.append(embeddings[i].tolist())
                 milvus_list_id.append(indexes[i])
                 data_list_sql.append(data_dict_sql)
 
