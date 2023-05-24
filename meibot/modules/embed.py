@@ -22,7 +22,7 @@ async def embed(ctx, embed_request: str = None):
         return
     base_url = f"http://{embedding_host}:{embedding_port}"
     try:
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=20.0) as client:
             response = await client.post(f"{base_url}/process", json={'user_input': embed_request})
             response.raise_for_status()
             status = response.json()
