@@ -1,7 +1,8 @@
+# Base image
 FROM mcr.microsoft.com/playwright:v1.32.1-focal
 
+# Set working directory
 WORKDIR /app
-ADD . /app
 
 # Install software-properties-common, and add deadsnakes PPA
 RUN apt-get update && apt-get install -y software-properties-common
@@ -16,13 +17,20 @@ RUN apt-get install -y tesseract-ocr libtesseract-dev
 # Update pip3 to pip corresponding to Python 3.8
 RUN python3.8 -m pip install --upgrade pip
 
+# Copy only requirements.txt first, to cache the pip install step
+COPY ./requirements.txt /app/requirements.txt
+
 # Install your Python dependencies
 RUN python3.8 -m pip install --no-cache-dir -r requirements.txt
+
+# Now copy your whole application
+COPY . /app
 
 # Use port 80
 EXPOSE 80
 
 CMD ["python3.8", "MeiBotMain.py"]
+
 
 
 # Instructions to run:
