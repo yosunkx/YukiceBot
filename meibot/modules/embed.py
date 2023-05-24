@@ -29,11 +29,12 @@ async def embed(ctx, embed_request: str = None):
     except httpx.HTTPStatusError as exc:
         status = {"status": f"HTTP error occurred: {exc}"}
     except httpx.RequestError as exc:
-        status = {"status": f"An error occurred while requesting: {exc}"}
+        status = {"status": f"An error of type {type(exc).__name__} occurred while requesting: {exc}"}
+
     except Exception as exc:
         status = {"status": f"An unexpected error occurred: {exc}"}
 
-    await ctx.send(status["status"] + f"\nhost: {embedding_host}:{embedding_port}")
+    await ctx.send(status["status"])
 
 
 def setup(bot):
