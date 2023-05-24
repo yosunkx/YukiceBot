@@ -49,9 +49,10 @@ And so, Astria lived on. Not as a physical being, not as a flicker in the sky, b
         embedding = embeddings[i]
         text_chunk = all_texts[i]
         index = all_indexes[i]
-        print(text_chunk)
+        # print(text_chunk)
         print(index)
-        print(embedding[:3].tolist(), '...', embedding[-3:].tolist())
+        # print(embedding[:3], '...', embedding[-3:])
+
     # Tokenize the text and count tokens
     tokens = tokenizer.tokenize(text)
     num_tokens = len(tokens)

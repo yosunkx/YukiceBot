@@ -14,7 +14,7 @@ def count_tokens(text):
 
 
 def generate_id():
-    return random.randint(0, 18446744073709551615)  # Range of a unsigned 64-bit integer
+    return random.randint(-9223372036854775808, 9223372036854775807)  # Range of a unsigned 64-bit integer
 
 
 # Split text into chunks
