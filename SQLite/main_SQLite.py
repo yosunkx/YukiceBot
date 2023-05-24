@@ -103,3 +103,15 @@ async def healthcheck():
     except Exception as e:
         print(f"An error occurred during health check: {e}")
         return {"status": "error"}, 500
+
+
+@app.delete("/storage")
+async def delete_all():
+    try:
+        async with aiosqlite.connect('/var/lib/sqlite/my_database.db') as db:
+            await db.execute("DELETE FROM my_table")
+            await db.commit()
+        return {"status": "ok"}
+    except Exception as e:
+        print(f"An error occurred during deleting storage: {e}")
+        return {"status": "error"}, 500
