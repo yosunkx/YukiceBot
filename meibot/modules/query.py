@@ -5,6 +5,9 @@ import os
 import socket
 import asyncio
 from pymilvus import connections, exceptions, CollectionSchema, FieldSchema, DataType, Collection, utility
+from . import ConsoleLog
+
+logger = ConsoleLog.set_logging('mylog.log')
 
 server_ip = '192.168.0.133'
 local_host = 'localhost'
@@ -29,19 +32,19 @@ async def query(ctx, query_request: str = None):
             host=milvus_host,
             port=milvus_port
         )
-        print(f"Connected to Milvus server at {milvus_host}:{milvus_port} with alias '{milvus_alias}'")
+        logger.debug(f"Connected to Milvus server at {milvus_host}:{milvus_port} with alias '{milvus_alias}'")
 
     except Exception as e:
-        print(f"Failed to connect to Milvus server at {milvus_host}:{milvus_port}")
-        print(f"Error: {e}")
+        logger.debug(f"Failed to connect to Milvus server at {milvus_host}:{milvus_port}")
+        logger.debug(f"Error: {e}")
 
     finally:
         try:
             connections.disconnect(milvus_alias)
-            print(f"Disconnected from Milvus server with alias '{milvus_alias}'")
+            logger.debug(f"Disconnected from Milvus server with alias '{milvus_alias}'")
         except exceptions.ConnectionNotFoundError as e:
-            print(f"Failed to disconnect because no connection with alias '{milvus_alias}' was found")
-            print(f"Error: {e}")
+            logger.debug(f"Failed to disconnect because no connection with alias '{milvus_alias}' was found")
+            logger.debug(f"Error: {e}")
 
 
 def setup(bot):
