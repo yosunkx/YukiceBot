@@ -60,8 +60,8 @@ async def on_message(message_obj):
             else:
                 logger.debug(message_obj.author.name + ": " + processed_content)
                 if message_obj.channel.id in message_log_channel_ids:
-                    await message_logs.append(message_obj.guild.id, {"role": "user", "content": message_obj.author.name + ": " + processed_content})
-                    await message_logs_for_embedding.append(message_obj.guild.id, f"{timestamp} UTC {message_obj.author.name}: {processed_content}")
+                    await message_logs.append(message_obj.guild.id, {"role": "user", "content": message_obj.author.display_name + ": " + processed_content})
+                    await message_logs_for_embedding.append(message_obj.guild.id, f"{timestamp} UTC {message_obj.author.display_name}: {processed_content}")
     else:
         return
 
@@ -124,7 +124,7 @@ async def on_message(message_obj):
 
 async def none_command(message_obj, message_text, logs):
     generated_message = await chatGPT.GPT_command(message_obj.content)
-    gpt_message = message_obj.author.name + ": " + message_text
+    gpt_message = message_obj.author.display_name + ": " + message_text
     ctx = await bot.get_context(message_obj)
     # print("Logs before passing to GPT_general: ", logs)
 
