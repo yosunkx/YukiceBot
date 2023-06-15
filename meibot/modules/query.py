@@ -33,10 +33,12 @@ async def query(ctx, query_request: str = None):
             port=milvus_port
         )
         logger.debug(f"Connected to Milvus server at {milvus_host}:{milvus_port} with alias '{milvus_alias}'")
+        await ctx.send(f"Connected to Milvus")
 
     except Exception as e:
         logger.debug(f"Failed to connect to Milvus server at {milvus_host}:{milvus_port}")
         logger.debug(f"Error: {e}")
+        await ctx.send(f"Failed to Connect to Milvus: {e}")
 
     finally:
         try:
