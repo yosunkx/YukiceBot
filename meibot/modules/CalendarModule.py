@@ -148,7 +148,8 @@ async def check_events(bot):
             else:
                 channel_name = 'general-chat'
             channel = discord.utils.get(bot.guilds[0].text_channels, name=channel_name)
-            GPT_message = await chatGPT.GPT_prompt(channel_message, "check_events")
+            #GPT_message = await chatGPT.GPT_prompt(channel_message, "check_events")
+            GPT_message = ''
             print('sending event')
             await channel.send(message_header + "\n" + GPT_message + "\n" + channel_message)
 
