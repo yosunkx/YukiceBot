@@ -1,10 +1,22 @@
 version: '3.5'
 services:
+  #meibot:
+  #  container_name: meibot
+  #  build:
+  #    context: ./meibot
+  #    dockerfile: Dockerfile
+  #  environment:
+  #    - DOCKER=True
+  #    - MILVUS_HOST=standalone
+  #    - EMBEDDING_HOST=embedding
+  #    - SQLITE_HOST=sqlite
+  #    - server_ip=192.168.0.133
+  #  volumes:
+  #    - meibot-data:/app/data
+  #  mem_limit: 1g
   meibot:
     container_name: meibot
-    build:
-      context: ./meibot
-      dockerfile: Dockerfile
+    image: yosunkx/meibot-repo:0.1.11
     environment:
       - DOCKER=True
       - MILVUS_HOST=standalone
@@ -13,7 +25,6 @@ services:
       - server_ip=192.168.0.133
     volumes:
       - meibot-data:/app/data
-    mem_limit: 1g
 
   sqlite:
     container_name: sqlite
