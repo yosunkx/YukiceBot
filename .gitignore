@@ -370,3 +370,5 @@ meibot/data/memory/
 __pycache__/
 deploy.py
 MeiBot.sln
+gpt_persona.py
+YukiceBot.py
